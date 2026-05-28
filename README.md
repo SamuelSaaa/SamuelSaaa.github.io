@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>📚 Resúmenes, Exámenes y Cultura General</title>
+    <title>📚 Exámenes IA - Con Usuarios</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
@@ -26,9 +26,94 @@
         
         .container { max-width: 1200px; margin: 0 auto; }
         
-        h1 { text-align: center; color: #ffd966; font-size: 2rem; margin-bottom: 10px; }
-        .subtitle { text-align: center; color: #cbd5e6; margin-bottom: 25px; }
-
+        /* Pantallas de login y registro */
+        .auth-screen {
+            background: rgba(15, 35, 55, 0.95);
+            backdrop-filter: blur(12px);
+            border-radius: 48px;
+            padding: 40px;
+            max-width: 450px;
+            margin: 50px auto;
+            text-align: center;
+            border: 1px solid rgba(255, 217, 102, 0.3);
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .auth-screen h2 {
+            color: #ffd966;
+            margin-bottom: 25px;
+        }
+        
+        .auth-screen input {
+            width: 100%;
+            padding: 14px;
+            margin: 10px 0;
+            border-radius: 30px;
+            border: 1px solid rgba(255,217,102,0.3);
+            background: rgba(0,0,0,0.4);
+            color: white;
+            font-size: 1rem;
+        }
+        
+        .auth-screen button {
+            background: linear-gradient(95deg, #ffd966, #ffb347);
+            border: none;
+            padding: 12px 28px;
+            border-radius: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        
+        .auth-screen .switch-btn {
+            background: transparent;
+            border: 1px solid #ffd966;
+            color: #ffd966;
+        }
+        
+        .error-msg {
+            color: #ff8888;
+            margin: 10px 0;
+            font-size: 0.9rem;
+        }
+        
+        /* Header de usuario */
+        .user-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(15, 35, 55, 0.8);
+            backdrop-filter: blur(8px);
+            border-radius: 60px;
+            padding: 10px 20px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .user-info {
+            color: #ffd966;
+            font-weight: bold;
+        }
+        
+        .admin-badge {
+            background: #ff4444;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            margin-left: 10px;
+        }
+        
+        .logout-btn {
+            background: rgba(255,100,100,0.3);
+            border: 1px solid #ff6666;
+            padding: 6px 16px;
+            border-radius: 30px;
+            cursor: pointer;
+            color: #ffaaaa;
+        }
+        
         .tabs {
             display: flex;
             gap: 15px;
@@ -85,11 +170,6 @@
             padding-top: 20px;
         }
         
-        .examenes-lista h3 {
-            color: #ffd966;
-            margin-bottom: 15px;
-        }
-        
         .examen-card {
             background: rgba(0,0,0,0.3);
             border-radius: 20px;
@@ -100,15 +180,7 @@
             align-items: center;
             flex-wrap: wrap;
             gap: 10px;
-            cursor: pointer;
-            transition: 0.2s;
             border: 1px solid rgba(255,217,102,0.2);
-        }
-        
-        .examen-card:hover {
-            background: rgba(255,217,102,0.1);
-            border-color: #ffd966;
-            transform: translateX(5px);
         }
         
         .examen-info {
@@ -126,10 +198,10 @@
             color: #8aaec0;
         }
         
-        .examen-preview {
-            font-size: 0.8rem;
-            color: #cbd5e6;
-            margin-top: 5px;
+        .examen-usuario {
+            font-size: 0.7rem;
+            color: #ffaa66;
+            margin-top: 3px;
         }
         
         .examen-actions {
@@ -145,6 +217,11 @@
             cursor: pointer;
             color: #ffd966;
             font-size: 0.8rem;
+        }
+        
+        .btn-icon.admin-delete {
+            color: #ff8888;
+            border: 1px solid #ff8888;
         }
         
         .btn-icon:hover { background: rgba(255,217,102,0.2); }
@@ -321,241 +398,130 @@
     </style>
 </head>
 <body>
-<div class="container">
-    <h1>📚 Resúmenes, Exámenes y Cultura General</h1>
-    <div class="subtitle">🤖 Con IA - Estudia y pon a prueba tus conocimientos</div>
-
-    <div class="tabs">
-        <button class="tab-btn active" data-tab="resumen">📄 Resumen y Examen</button>
-        <button class="tab-btn" data-tab="historial">📋 Historial de Exámenes</button>
-        <button class="tab-btn" data-tab="cultura">🌍 Cultura General</button>
-    </div>
-
-    <!-- Panel Resumen y Examen -->
-    <div id="resumenPanel" class="panel active-panel">
-        <div id="resumenSection">
-            <h3>📎 Sube un PDF o pega texto</h3>
-            <div class="file-drop-area" id="fileDropArea">
-                <div class="file-icon">📄</div>
-                <div class="file-drop-text"><strong>📂 Arrastra y suelta tu PDF aquí</strong><br>o haz clic para seleccionar</div>
-                <div class="file-info" id="fileInfo"><span class="file-name" id="fileName"></span><button class="file-clear-btn" id="clearFileBtn">✖ Cambiar</button></div>
-                <div class="file-select-btn" id="selectFileBtn">🔍 Seleccionar archivo</div>
-                <input type="file" id="pdfInput" accept="application/pdf" class="file-input-hidden">
-            </div>
-            <textarea id="rawTextInput" rows="4" placeholder="O pega aquí el texto que quieras resumir..."></textarea>
-            <button class="primary" id="generateSummaryBtn">✨ Generar Resumen con IA</button>
-
-            <div id="summaryResult" class="result-box" style="display:none;">
-                <strong>📌 Resumen generado:</strong>
-                <div id="summaryText"></div>
-                <div class="exam-from-summary-btn" id="examFromSummaryContainer" style="display:none;">
-                    <button class="secondary" id="examFromSummaryBtn">📝 Tomar examen sobre este resumen</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="avisoExamen" class="aviso-examen" style="display:none;">
-            📖 El resumen se ha ocultado para mantener la honestidad del examen.<br>
-            Termina el examen para volver a verlo.
-        </div>
-
-        <div id="examArea" style="margin-top: 20px;"></div>
-    </div>
-
-    <!-- Panel Historial de Exámenes -->
-    <div id="historialPanel" class="panel">
-        <h3>📋 Exámenes guardados</h3>
-        <div id="listaExamenes" class="examenes-lista"></div>
-    </div>
-
-    <!-- Panel Cultura General -->
-    <div id="culturaPanel" class="panel">
-        <div id="culturaApp"></div>
-    </div>
+<div class="container" id="app">
+    <!-- Aquí se renderiza todo dinámicamente -->
 </div>
 
 <script>
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-    
-    // ========== MÚLTIPLES APIS CON ROTACIÓN AUTOMÁTICA ==========
-    
-    // Clave de Groq
+    // ========== CONFIGURACIÓN DE APIS ==========
     const GROQ_API_KEY = "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";
-    
-    // Clave de Cerebras (la que me diste)
     const CEREBRAS_API_KEY = "csk-mmcetp8ndr55em9v83833hd8xvx495vwkpcvkmm8h2xcp8nc";
     
     let proveedorActual = 0;
-    let ultimoProveedorUsado = "Groq";
     
-    // Función para llamar a Groq
     async function llamarGroq(prompt) {
         const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${GROQ_API_KEY}`
-            },
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${GROQ_API_KEY}` },
             body: JSON.stringify({
                 model: "llama-3.1-8b-instant",
-                messages: [
-                    { role: "system", content: "Eres un asistente educativo útil. Respondes en español de forma clara y concisa." },
-                    { role: "user", content: prompt }
-                ],
+                messages: [{ role: "system", content: "Eres un asistente educativo útil. Respondes en español." }, { role: "user", content: prompt }],
                 temperature: 0.5,
                 max_tokens: 1500
             })
         });
-        
-        if (response.status === 429) throw new Error("Rate limit de Groq");
+        if (response.status === 429) throw new Error("Rate limit");
         if (!response.ok) throw new Error(`Error ${response.status}`);
         const data = await response.json();
         return data.choices[0].message.content;
     }
     
-    // Función para llamar a Cerebras
     async function llamarCerebras(prompt) {
         const response = await fetch("https://api.cerebras.ai/v1/chat/completions", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${CEREBRAS_API_KEY}`
-            },
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${CEREBRAS_API_KEY}` },
             body: JSON.stringify({
                 model: "llama3.1-8b",
-                messages: [
-                    { role: "system", content: "Eres un asistente educativo útil. Respondes en español de forma clara y concisa." },
-                    { role: "user", content: prompt }
-                ],
+                messages: [{ role: "system", content: "Eres un asistente educativo útil. Respondes en español." }, { role: "user", content: prompt }],
                 temperature: 0.5,
                 max_tokens: 1500
             })
         });
-        
-        if (response.status === 429) throw new Error("Rate limit de Cerebras");
+        if (response.status === 429) throw new Error("Rate limit");
         if (!response.ok) throw new Error(`Error ${response.status}`);
         const data = await response.json();
         return data.choices[0].message.content;
     }
     
-    // Función principal con rotación automática entre proveedores
-    async function llamarIA(prompt, intento = 0) {
-        const proveedores = [
-            { nombre: "Groq", func: llamarGroq },
-            { nombre: "Cerebras", func: llamarCerebras }
-        ];
-        
+    async function llamarIA(prompt) {
+        const proveedores = [llamarGroq, llamarCerebras];
         for (let i = 0; i < proveedores.length; i++) {
-            const idx = (proveedorActual + i) % proveedores.length;
-            const provider = proveedores[idx];
-            
             try {
-                const resultado = await provider.func(prompt);
-                proveedorActual = (idx + 1) % proveedores.length;
-                ultimoProveedorUsado = provider.nombre;
-                console.log(`✅ Usando ${provider.nombre}`);
-                return resultado;
-            } catch (error) {
-                console.log(`❌ ${provider.nombre} falló: ${error.message}`);
-                // Continuar con el siguiente proveedor
-            }
+                return await proveedores[(proveedorActual + i) % proveedores.length](prompt);
+            } catch(e) { continue; }
         }
-        
-        // Si todos fallaron
-        throw new Error("Todos los proveedores fallaron. Espera unos segundos y reintenta.");
+        throw new Error("Todos los proveedores fallaron. Espera unos segundos.");
     }
     
-    // ========== ALMACENAMIENTO LOCAL ==========
+    // ========== SISTEMA DE USUARIOS ==========
+    let usuarioActual = null;
+    let esAdmin = false;
+    
+    // Usuario administrador predefinido (TÚ)
+    const ADMIN_USER = "SamuelDJAdmin";
+    const ADMIN_PASS = "1043690741SamuelDJADJA";  // ⚠️ Cámbiala después
+    
+    function cargarUsuarios() {
+        const usuarios = localStorage.getItem('usuarios');
+        if (!usuarios) {
+            const usuariosIniciales = {};
+            usuariosIniciales[ADMIN_USER] = { password: ADMIN_PASS, esAdmin: true };
+            localStorage.setItem('usuarios', JSON.stringify(usuariosIniciales));
+        }
+        return JSON.parse(localStorage.getItem('usuarios'));
+    }
+    
+    function guardarUsuarios(usuarios) {
+        localStorage.setItem('usuarios', JSON.stringify(usuarios));
+    }
+    
+    function registrarUsuario(username, password) {
+        const usuarios = cargarUsuarios();
+        if (usuarios[username]) return { success: false, error: "El usuario ya existe" };
+        if (password.length < 4) return { success: false, error: "La contraseña debe tener al menos 4 caracteres" };
+        
+        usuarios[username] = { password: password, esAdmin: false };
+        guardarUsuarios(usuarios);
+        return { success: true };
+    }
+    
+    function loginUsuario(username, password) {
+        const usuarios = cargarUsuarios();
+        const user = usuarios[username];
+        if (!user) return { success: false, error: "Usuario no existe" };
+        if (user.password !== password) return { success: false, error: "Contraseña incorrecta" };
+        return { success: true, esAdmin: user.esAdmin || false };
+    }
+    
+    // ========== EXÁMENES GUARDADOS ==========
     let examenesGuardados = [];
     
-    function cargarExamenes() {
+    function cargarExamenesGuardados() {
         const guardados = localStorage.getItem('examenes_guardados');
-        if (guardados) {
-            examenesGuardados = JSON.parse(guardados);
-        } else {
-            examenesGuardados = [];
-        }
-        actualizarListaExamenes();
+        examenesGuardados = guardados ? JSON.parse(guardados) : [];
     }
     
-    function guardarExamen(titulo, resumen, preguntas, respuestas) {
+    function guardarExamenEnStorage(titulo, resumen, preguntas, usuario) {
         const nuevoExamen = {
             id: Date.now(),
             titulo: titulo.substring(0, 50) + (titulo.length > 50 ? '...' : ''),
             resumen: resumen,
             preguntas: preguntas,
-            respuestasCorrectas: respuestas,
+            usuario: usuario,
             fecha: new Date().toLocaleString()
         };
         examenesGuardados.unshift(nuevoExamen);
-        if (examenesGuardados.length > 20) examenesGuardados.pop();
+        if (examenesGuardados.length > 50) examenesGuardados.pop();
         localStorage.setItem('examenes_guardados', JSON.stringify(examenesGuardados));
-        actualizarListaExamenes();
         return nuevoExamen.id;
     }
     
-    function eliminarExamen(id) {
+    function eliminarExamenStorage(id) {
         examenesGuardados = examenesGuardados.filter(e => e.id !== id);
         localStorage.setItem('examenes_guardados', JSON.stringify(examenesGuardados));
-        actualizarListaExamenes();
     }
     
-    function actualizarListaExamenes() {
-        const contenedor = document.getElementById('listaExamenes');
-        if (!contenedor) return;
-        
-        if (examenesGuardados.length === 0) {
-            contenedor.innerHTML = '<div class="empty-message">📭 No hay exámenes guardados aún. Genera un resumen y crea un examen para que aparezca aquí.</div>';
-            return;
-        }
-        
-        contenedor.innerHTML = examenesGuardados.map(examen => `
-            <div class="examen-card" data-id="${examen.id}">
-                <div class="examen-info">
-                    <div class="examen-titulo">📖 ${escapeHtml(examen.titulo)}</div>
-                    <div class="examen-fecha">📅 ${examen.fecha}</div>
-                    <div class="examen-preview">${examen.preguntas?.length || 0} preguntas</div>
-                </div>
-                <div class="examen-actions">
-                    <button class="btn-icon tomar-examen" data-id="${examen.id}">📝 Tomar examen</button>
-                    <button class="btn-icon eliminar-examen" data-id="${examen.id}">🗑️ Eliminar</button>
-                </div>
-            </div>
-        `).join('');
-        
-        document.querySelectorAll('.tomar-examen').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const id = parseInt(btn.getAttribute('data-id'));
-                iniciarExamenGuardado(id);
-            });
-        });
-        
-        document.querySelectorAll('.eliminar-examen').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const id = parseInt(btn.getAttribute('data-id'));
-                eliminarExamen(id);
-            });
-        });
-    }
-    
-    function iniciarExamenGuardado(id) {
-        const examen = examenesGuardados.find(e => e.id === id);
-        if (!examen) return;
-        
-        document.querySelector('.tab-btn[data-tab="resumen"]').click();
-        
-        preguntasExamen = examen.preguntas;
-        respuestasUsuario = [];
-        examenEnCurso = true;
-        preguntaActualIndex = 0;
-        ultimoResumen = examen.resumen;
-        ocultarResumen();
-        mostrarPreguntaNormal();
-    }
-    
-    // ========== VARIABLES DEL EXAMEN ==========
+    // ========== VARIABLES GLOBALES ==========
     let ultimoResumen = "";
     let preguntasExamen = [];
     let respuestasUsuario = [];
@@ -569,19 +535,217 @@
     let tiempoRestante = 300;
     let temporizador = null;
     
-    const examArea = document.getElementById('examArea');
-    const culturaApp = document.getElementById('culturaApp');
-    const resumenSection = document.getElementById('resumenSection');
-    const avisoExamen = document.getElementById('avisoExamen');
+    const app = document.getElementById('app');
+    
+    // ========== RENDERIZADO DE PANTALLAS ==========
+    function mostrarPantallaLogin() {
+        app.innerHTML = `
+            <div class="auth-screen">
+                <h2>📚 Bienvenido</h2>
+                <div id="loginForm">
+                    <input type="text" id="loginUser" placeholder="Usuario" autocomplete="off">
+                    <input type="password" id="loginPass" placeholder="Contraseña">
+                    <div id="loginError" class="error-msg"></div>
+                    <button id="btnLogin">🔓 Iniciar sesión</button>
+                    <button id="btnMostrarRegistro" class="switch-btn">📝 Crear cuenta nueva</button>
+                </div>
+                <div id="registerForm" style="display:none;">
+                    <input type="text" id="regUser" placeholder="Nuevo usuario">
+                    <input type="password" id="regPass" placeholder="Contraseña (mínimo 4 caracteres)">
+                    <div id="regError" class="error-msg"></div>
+                    <button id="btnRegister">✅ Registrarse</button>
+                    <button id="btnMostrarLogin" class="switch-btn">◀ Volver al inicio</button>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('btnLogin')?.addEventListener('click', () => {
+            const user = document.getElementById('loginUser').value.trim();
+            const pass = document.getElementById('loginPass').value;
+            const result = loginUsuario(user, pass);
+            if (result.success) {
+                usuarioActual = user;
+                esAdmin = result.esAdmin;
+                mostrarPantallaPrincipal();
+            } else {
+                document.getElementById('loginError').innerText = result.error;
+            }
+        });
+        
+        document.getElementById('btnMostrarRegistro')?.addEventListener('click', () => {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+        });
+        
+        document.getElementById('btnMostrarLogin')?.addEventListener('click', () => {
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'block';
+        });
+        
+        document.getElementById('btnRegister')?.addEventListener('click', () => {
+            const user = document.getElementById('regUser').value.trim();
+            const pass = document.getElementById('regPass').value;
+            const result = registrarUsuario(user, pass);
+            if (result.success) {
+                document.getElementById('registerForm').style.display = 'none';
+                document.getElementById('loginForm').style.display = 'block';
+                document.getElementById('loginUser').value = user;
+                document.getElementById('loginPass').value = pass;
+                document.getElementById('regError').innerText = "";
+                document.getElementById('loginError').innerText = "✅ Usuario registrado. Inicia sesión.";
+            } else {
+                document.getElementById('regError').innerText = result.error;
+            }
+        });
+    }
+    
+    function mostrarPantallaPrincipal() {
+        cargarExamenesGuardados();
+        
+        app.innerHTML = `
+            <div class="user-header">
+                <div class="user-info">
+                    👤 ${usuarioActual} ${esAdmin ? '<span class="admin-badge">👑 ADMINISTRADOR</span>' : ''}
+                </div>
+                <button class="logout-btn" id="logoutBtn">🚪 Cerrar sesión</button>
+            </div>
+            
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="resumen">📄 Resumen y Examen</button>
+                <button class="tab-btn" data-tab="historial">📋 Historial de Exámenes</button>
+                <button class="tab-btn" data-tab="cultura">🌍 Cultura General</button>
+            </div>
+            
+            <div id="resumenPanel" class="panel active-panel">
+                <div id="resumenSection">
+                    <h3>📎 Sube un PDF o pega texto</h3>
+                    <div class="file-drop-area" id="fileDropArea">
+                        <div class="file-icon">📄</div>
+                        <div class="file-drop-text"><strong>📂 Arrastra y suelta tu PDF aquí</strong><br>o haz clic para seleccionar</div>
+                        <div class="file-info" id="fileInfo"><span class="file-name" id="fileName"></span><button class="file-clear-btn" id="clearFileBtn">✖ Cambiar</button></div>
+                        <div class="file-select-btn" id="selectFileBtn">🔍 Seleccionar archivo</div>
+                        <input type="file" id="pdfInput" accept="application/pdf" class="file-input-hidden">
+                    </div>
+                    <textarea id="rawTextInput" rows="4" placeholder="O pega aquí el texto que quieras resumir..."></textarea>
+                    <button class="primary" id="generateSummaryBtn">✨ Generar Resumen con IA</button>
+                    <div id="summaryResult" class="result-box" style="display:none;">
+                        <strong>📌 Resumen generado:</strong>
+                        <div id="summaryText"></div>
+                        <div class="exam-from-summary-btn" id="examFromSummaryContainer" style="display:none;">
+                            <button class="secondary" id="examFromSummaryBtn">📝 Tomar examen sobre este resumen</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="avisoExamen" class="aviso-examen" style="display:none;">📖 El resumen se ha ocultado para mantener la honestidad del examen.<br>Termina el examen para volver a verlo.</div>
+                <div id="examArea" style="margin-top: 20px;"></div>
+            </div>
+            
+            <div id="historialPanel" class="panel">
+                <h3>📋 Exámenes guardados</h3>
+                <div id="listaExamenes" class="examenes-lista"></div>
+            </div>
+            
+            <div id="culturaPanel" class="panel">
+                <div id="culturaApp"></div>
+            </div>
+        `;
+        
+        // Eventos de logout
+        document.getElementById('logoutBtn')?.addEventListener('click', () => {
+            usuarioActual = null;
+            esAdmin = false;
+            mostrarPantallaLogin();
+        });
+        
+        // Inicializar componentes
+        inicializarSubidaArchivos();
+        inicializarResumen();
+        inicializarExamen();
+        actualizarListaExamenes();
+        inicializarCulturaGeneral();
+        
+        // Pestañas
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const tab = btn.getAttribute('data-tab');
+                document.querySelectorAll('.panel').forEach(p => p.classList.remove('active-panel'));
+                document.getElementById(`${tab}Panel`).classList.add('active-panel');
+                if (tab === 'cultura' && !culturaEnCurso && document.getElementById('culturaApp').innerHTML === '') iniciarCulturaGeneral();
+                if (tab === 'historial') actualizarListaExamenes();
+            });
+        });
+    }
+    
+    function actualizarListaExamenes() {
+        const contenedor = document.getElementById('listaExamenes');
+        if (!contenedor) return;
+        
+        if (examenesGuardados.length === 0) {
+            contenedor.innerHTML = '<div class="empty-message">📭 No hay exámenes guardados aún. Genera un examen y aparecerá aquí.</div>';
+            return;
+        }
+        
+        contenedor.innerHTML = examenesGuardados.map(examen => `
+            <div class="examen-card">
+                <div class="examen-info">
+                    <div class="examen-titulo">📖 ${escapeHtml(examen.titulo)}</div>
+                    <div class="examen-fecha">📅 ${examen.fecha}</div>
+                    <div class="examen-usuario">👤 Creado por: ${escapeHtml(examen.usuario)}</div>
+                    <div class="examen-preview">${examen.preguntas?.length || 0} preguntas</div>
+                </div>
+                <div class="examen-actions">
+                    <button class="btn-icon tomar-examen" data-id="${examen.id}">📝 Tomar examen</button>
+                    ${esAdmin ? `<button class="btn-icon admin-delete eliminar-examen-admin" data-id="${examen.id}">🗑️ Eliminar (Admin)</button>` : ''}
+                </div>
+            </div>
+        `).join('');
+        
+        document.querySelectorAll('.tomar-examen').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = parseInt(btn.getAttribute('data-id'));
+                const examen = examenesGuardados.find(e => e.id === id);
+                if (examen) iniciarExamenGuardado(examen);
+            });
+        });
+        
+        if (esAdmin) {
+            document.querySelectorAll('.eliminar-examen-admin').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const id = parseInt(btn.getAttribute('data-id'));
+                    eliminarExamenStorage(id);
+                    actualizarListaExamenes();
+                });
+            });
+        }
+    }
+    
+    function iniciarExamenGuardado(examen) {
+        preguntasExamen = examen.preguntas;
+        respuestasUsuario = [];
+        examenEnCurso = true;
+        preguntaActualIndex = 0;
+        ultimoResumen = examen.resumen;
+        ocultarResumen();
+        mostrarPreguntaNormal();
+        document.querySelector('.tab-btn[data-tab="resumen"]').click();
+    }
+    
+    // ========== FUNCIONES DEL EXAMEN ==========
+    const examArea = () => document.getElementById('examArea');
+    const culturaApp = () => document.getElementById('culturaApp');
+    const resumenSection = () => document.getElementById('resumenSection');
+    const avisoExamen = () => document.getElementById('avisoExamen');
     
     function ocultarResumen() {
-        if (resumenSection) resumenSection.style.display = 'none';
-        if (avisoExamen) avisoExamen.style.display = 'block';
+        if (resumenSection()) resumenSection().style.display = 'none';
+        if (avisoExamen()) avisoExamen().style.display = 'block';
     }
     
     function mostrarResumen() {
-        if (resumenSection) resumenSection.style.display = 'block';
-        if (avisoExamen) avisoExamen.style.display = 'none';
+        if (resumenSection()) resumenSection().style.display = 'block';
+        if (avisoExamen()) avisoExamen().style.display = 'none';
     }
     
     function parsearPreguntas(respuesta) {
@@ -616,77 +780,80 @@
         return texto;
     }
     
-    // ========== INTERACTIVIDAD ARCHIVO ==========
-    const fileDropArea = document.getElementById('fileDropArea');
-    const pdfInput = document.getElementById('pdfInput');
-    const fileInfo = document.getElementById('fileInfo');
-    const fileNameSpan = document.getElementById('fileName');
-    const selectFileBtn = document.getElementById('selectFileBtn');
-    const clearFileBtn = document.getElementById('clearFileBtn');
-    
-    function updateFileUI(file) {
-        if (file) {
-            fileNameSpan.textContent = `📄 ${file.name} (${(file.size/1024).toFixed(1)} KB)`;
-            fileInfo.classList.add('show');
-            fileDropArea.classList.add('has-file');
-            pdfInput.files = file;
-        } else {
-            fileInfo.classList.remove('show');
-            fileDropArea.classList.remove('has-file');
-            pdfInput.value = '';
+    function inicializarSubidaArchivos() {
+        const fileDropArea = document.getElementById('fileDropArea');
+        const pdfInput = document.getElementById('pdfInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileNameSpan = document.getElementById('fileName');
+        const selectFileBtn = document.getElementById('selectFileBtn');
+        const clearFileBtn = document.getElementById('clearFileBtn');
+        
+        function updateFileUI(file) {
+            if (file) {
+                fileNameSpan.textContent = `📄 ${file.name} (${(file.size/1024).toFixed(1)} KB)`;
+                fileInfo.classList.add('show');
+                fileDropArea.classList.add('has-file');
+                pdfInput.files = file;
+            } else {
+                fileInfo.classList.remove('show');
+                fileDropArea.classList.remove('has-file');
+                pdfInput.value = '';
+            }
         }
+        selectFileBtn?.addEventListener('click', () => pdfInput.click());
+        pdfInput?.addEventListener('change', (e) => updateFileUI(e.target.files[0]));
+        clearFileBtn?.addEventListener('click', () => updateFileUI(null));
+        fileDropArea?.addEventListener('dragover', (e) => { e.preventDefault(); fileDropArea.classList.add('drag-over'); });
+        fileDropArea?.addEventListener('dragleave', () => fileDropArea.classList.remove('drag-over'));
+        fileDropArea?.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileDropArea.classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type === 'application/pdf') updateFileUI(file);
+            else alert('Solo PDF');
+        });
+        fileDropArea?.addEventListener('click', () => pdfInput.click());
     }
-    selectFileBtn.addEventListener('click', () => pdfInput.click());
-    pdfInput.addEventListener('change', (e) => updateFileUI(e.target.files[0]));
-    clearFileBtn.addEventListener('click', () => updateFileUI(null));
-    fileDropArea.addEventListener('dragover', (e) => { e.preventDefault(); fileDropArea.classList.add('drag-over'); });
-    fileDropArea.addEventListener('dragleave', () => fileDropArea.classList.remove('drag-over'));
-    fileDropArea.addEventListener('drop', (e) => {
-        e.preventDefault();
-        fileDropArea.classList.remove('drag-over');
-        const file = e.dataTransfer.files[0];
-        if (file && file.type === 'application/pdf') updateFileUI(file);
-        else alert('Solo PDF');
-    });
-    fileDropArea.addEventListener('click', () => pdfInput.click());
     
-    // ========== GENERAR RESUMEN ==========
-    document.getElementById('generateSummaryBtn').addEventListener('click', async () => {
-        const pdfFile = pdfInput.files[0];
-        const manualText = document.getElementById('rawTextInput').value;
-        let textoFuente = "";
-        if (pdfFile) {
-            try { textoFuente = await extraerTextoPDF(pdfFile); }
-            catch(e) { alert("Error PDF: " + e.message); return; }
-        } else if (manualText.trim()) { textoFuente = manualText; }
-        else { alert("Sube un PDF o texto"); return; }
+    function inicializarResumen() {
+        document.getElementById('generateSummaryBtn')?.addEventListener('click', async () => {
+            const pdfFile = document.getElementById('pdfInput').files[0];
+            const manualText = document.getElementById('rawTextInput').value;
+            let textoFuente = "";
+            if (pdfFile) {
+                try { textoFuente = await extraerTextoPDF(pdfFile); }
+                catch(e) { alert("Error PDF: " + e.message); return; }
+            } else if (manualText.trim()) { textoFuente = manualText; }
+            else { alert("Sube un PDF o texto"); return; }
+            
+            const summaryDiv = document.getElementById('summaryResult');
+            const summaryTextDiv = document.getElementById('summaryText');
+            const examBtnContainer = document.getElementById('examFromSummaryContainer');
+            summaryDiv.style.display = 'block';
+            summaryTextDiv.innerHTML = '<span class="loading"></span> Generando resumen...';
+            examBtnContainer.style.display = 'none';
+            
+            try {
+                const prompt = `Resume el siguiente texto de forma clara y concisa en español (máximo 300 palabras):\n\n${textoFuente.substring(0,8000)}`;
+                const resumen = await llamarIA(prompt);
+                summaryTextDiv.innerHTML = resumen.replace(/\n/g,'<br>');
+                ultimoResumen = resumen;
+                examBtnContainer.style.display = 'block';
+            } catch(e) { 
+                summaryTextDiv.innerHTML = `<div style="color:#ffaaaa;">❌ Error: ${e.message}</div>`;
+            }
+        });
         
-        const summaryDiv = document.getElementById('summaryResult');
-        const summaryTextDiv = document.getElementById('summaryText');
-        const examBtnContainer = document.getElementById('examFromSummaryContainer');
-        summaryDiv.style.display = 'block';
-        summaryTextDiv.innerHTML = '<span class="loading"></span> Generando resumen...';
-        examBtnContainer.style.display = 'none';
-        
-        try {
-            const prompt = `Resume el siguiente texto de forma clara y concisa en español (máximo 300 palabras):\n\n${textoFuente.substring(0,8000)}`;
-            const resumen = await llamarIA(prompt);
-            summaryTextDiv.innerHTML = resumen.replace(/\n/g,'<br>');
-            ultimoResumen = resumen;
-            examBtnContainer.style.display = 'block';
-        } catch(e) { 
-            summaryTextDiv.innerHTML = `<div style="color:#ffaaaa; text-align:center;">❌ Error: ${e.message}<br><br>Espera unos segundos y reintenta.</div>`;
-        }
-    });
-    
-    // ========== EXAMEN NORMAL ==========
-    document.getElementById('examFromSummaryBtn').addEventListener('click', async () => {
-        if (!ultimoResumen) { alert("Genera un resumen primero"); return; }
-        await iniciarExamenNormal(ultimoResumen);
-    });
+        document.getElementById('examFromSummaryBtn')?.addEventListener('click', async () => {
+            if (!ultimoResumen) { alert("Genera un resumen primero"); return; }
+            await iniciarExamenNormal(ultimoResumen);
+        });
+    }
     
     async function iniciarExamenNormal(textoBase) {
-        examArea.innerHTML = '<div class="loading"></div> Generando examen de 10 preguntas...';
+        const area = examArea();
+        if (!area) return;
+        area.innerHTML = '<div class="loading"></div> Generando examen de 10 preguntas...';
         try {
             const prompt = `Genera un examen de 10 preguntas de opción múltiple (A,B,C,D) basado en este texto. Usa este formato exacto:
 Pregunta 1: [texto]
@@ -707,17 +874,19 @@ Texto: ${textoBase.substring(0,6000)}`;
             ocultarResumen();
             mostrarPreguntaNormal();
         } catch(e) { 
-            examArea.innerHTML = `<div style="color:#ffaaaa; text-align:center;">❌ Error: ${e.message}<br><br>Espera unos segundos y haz clic en "Nuevo examen".</div>`;
+            area.innerHTML = `<div style="color:#ffaaaa; text-align:center;">❌ Error: ${e.message}<br><br>Espera unos segundos y reintenta.</div>`;
         }
     }
     
     function mostrarPreguntaNormal() {
+        const area = examArea();
+        if (!area) return;
         if (preguntaActualIndex >= preguntasExamen.length) {
             mostrarResultadosNormal();
             return;
         }
         const q = preguntasExamen[preguntaActualIndex];
-        examArea.innerHTML = `
+        area.innerHTML = `
             <div class="question-card">
                 <div style="margin-bottom:15px; color:#ffd966;">📋 Pregunta ${preguntaActualIndex+1} de ${preguntasExamen.length}</div>
                 <div class="question-text">${escapeHtml(q.texto)}</div>
@@ -753,17 +922,14 @@ Texto: ${textoBase.substring(0,6000)}`;
     }
     
     function mostrarResultadosNormal() {
+        const area = examArea();
+        if (!area) return;
         const total = respuestasUsuario.length;
         const correctas = respuestasUsuario.filter(r => r.seleccionada === r.correcta).length;
         const nota = (correctas / total) * 5;
         examenEnCurso = false;
         
-        const respuestasParaGuardar = preguntasExamen.map((p, i) => ({
-            pregunta: p.texto,
-            correcta: p.respuesta,
-            opciones: p.opciones
-        }));
-        guardarExamen(ultimoResumen, ultimoResumen, preguntasExamen, respuestasParaGuardar);
+        guardarExamenEnStorage(ultimoResumen, ultimoResumen, preguntasExamen, usuarioActual);
         
         let preguntasHtml = '<div style="font-family: Arial; padding: 20px;"><h1>📚 Examen - Repaso</h1><h2>Preguntas y Respuestas Correctas</h2>';
         respuestasUsuario.forEach((r, i) => {
@@ -776,16 +942,16 @@ Texto: ${textoBase.substring(0,6000)}`;
         });
         preguntasHtml += `<p style="margin-top: 20px;"><strong>Calificación: ${nota.toFixed(1)} / 5.0 (${correctas}/${total} correctas)</strong></p></div>`;
         
-        examArea.innerHTML = `
+        area.innerHTML = `
             <div class="score-area">
                 <div style="font-size:1.2rem;">📊 Resultado del Examen</div>
                 <div class="score-number">${nota.toFixed(1)} / 5.0</div>
                 <div>✅ Correctas: ${correctas} | ❌ Incorrectas: ${total - correctas}</div>
                 <div style="margin-top: 15px;">
-                    <button class="primary" id="pdfBtn">📄 Generar PDF con todas las preguntas</button>
-                    <button class="secondary" id="newExamBtn">📝 Nuevo examen (mismo texto)</button>
+                    <button class="primary" id="pdfBtn">📄 Generar PDF</button>
+                    <button class="secondary" id="newExamBtn">📝 Nuevo examen</button>
                 </div>
-                <div style="margin-top: 15px; font-size:0.9rem; color:#ffd966;">✅ Este examen ha sido guardado en el historial</div>
+                <div style="margin-top: 15px; color:#ffd966;">✅ Examen guardado en el historial</div>
             </div>
             <div id="pdfContent" style="display:none;">${preguntasHtml}</div>
         `;
@@ -800,18 +966,23 @@ Texto: ${textoBase.substring(0,6000)}`;
     }
     
     // ========== CULTURA GENERAL ==========
+    async function inicializarCulturaGeneral() {
+        await iniciarCulturaGeneral();
+    }
+    
     async function iniciarCulturaGeneral() {
-        culturaApp.innerHTML = '<div class="loading"></div> Generando preguntas de cultura general...';
+        const appCultura = document.getElementById('culturaApp');
+        if (!appCultura) return;
+        appCultura.innerHTML = '<div class="loading"></div> Generando preguntas de cultura general...';
         try {
-            const prompt = `Genera 10 preguntas de cultura general variadas (historia, ciencia, arte, geografía, entretenimiento). Cada pregunta debe ser de opción múltiple (A,B,C,D) con una respuesta correcta. Usa este formato exacto:
+            const prompt = `Genera 10 preguntas de cultura general variadas (historia, ciencia, arte, geografía). Cada pregunta debe ser de opción múltiple (A,B,C,D). Usa este formato:
 Pregunta 1: [texto]
 A) [opcion]
 B) [opcion]
 C) [opcion]
 D) [opcion]
 Respuesta: X
-(Repite hasta 10)
-Las preguntas deben ser desafiantes pero justas.`;
+(Repite hasta 10)`;
             const respuesta = await llamarIA(prompt);
             culturaPreguntas = parsearPreguntas(respuesta);
             if (culturaPreguntas.length < 8) throw new Error("No se generaron suficientes");
@@ -820,45 +991,38 @@ Las preguntas deben ser desafiantes pero justas.`;
             culturaIndex = 0;
             culturaEnCurso = true;
             tiempoRestante = 300;
-            iniciarTemporizador();
+            if (temporizador) clearInterval(temporizador);
+            temporizador = setInterval(() => {
+                if (!culturaEnCurso) return;
+                if (tiempoRestante <= 0) {
+                    clearInterval(temporizador);
+                    finalizarCulturaGeneral();
+                } else {
+                    tiempoRestante--;
+                    const minutos = Math.floor(tiempoRestante / 60);
+                    const segundos = tiempoRestante % 60;
+                    const timerDiv = document.getElementById('culturaTimer');
+                    if (timerDiv) {
+                        timerDiv.innerHTML = `⏱️ ${minutos.toString().padStart(2,'0')}:${segundos.toString().padStart(2,'0')}`;
+                        if (tiempoRestante < 60) timerDiv.classList.add('warning');
+                    }
+                }
+            }, 1000);
             mostrarPreguntaCultura();
         } catch(e) { 
-            culturaApp.innerHTML = `<div style="color:#ffaaaa; text-align:center;">❌ Error: ${e.message}<br><br>Espera unos segundos y haz clic en "Nuevo test".</div>`;
-        }
-    }
-    
-    function iniciarTemporizador() {
-        if (temporizador) clearInterval(temporizador);
-        temporizador = setInterval(() => {
-            if (!culturaEnCurso) return;
-            if (tiempoRestante <= 0) {
-                clearInterval(temporizador);
-                finalizarCulturaGeneral();
-            } else {
-                tiempoRestante--;
-                actualizarTimerCultura();
-            }
-        }, 1000);
-    }
-    
-    function actualizarTimerCultura() {
-        const minutos = Math.floor(tiempoRestante / 60);
-        const segundos = tiempoRestante % 60;
-        const timerDiv = document.getElementById('culturaTimer');
-        if (timerDiv) {
-            timerDiv.innerHTML = `⏱️ ${minutos.toString().padStart(2,'0')}:${segundos.toString().padStart(2,'0')}`;
-            if (tiempoRestante < 60) timerDiv.classList.add('warning');
-            else timerDiv.classList.remove('warning');
+            appCultura.innerHTML = `<div style="color:#ffaaaa; text-align:center;">❌ Error: ${e.message}<br><button class="primary" onclick="iniciarCulturaGeneral()">Reintentar</button></div>`;
         }
     }
     
     function mostrarPreguntaCultura() {
+        const appCultura = document.getElementById('culturaApp');
+        if (!appCultura) return;
         if (culturaIndex >= culturaPreguntas.length) {
             finalizarCulturaGeneral();
             return;
         }
         const q = culturaPreguntas[culturaIndex];
-        culturaApp.innerHTML = `
+        appCultura.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; margin-bottom:20px;">
                 <div style="color:#ffd966;">📋 Pregunta ${culturaIndex+1} de ${culturaPreguntas.length}</div>
                 <div id="culturaTimer" class="timer">⏱️ 05:00</div>
@@ -869,7 +1033,6 @@ Las preguntas deben ser desafiantes pero justas.`;
                 <div id="feedbackCultura"></div>
             </div>
         `;
-        actualizarTimerCultura();
         document.querySelectorAll('#opcionesCultura .option-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 if (!culturaEnCurso) return;
@@ -881,8 +1044,7 @@ Las preguntas deben ser desafiantes pero justas.`;
                     pregunta: culturaPreguntas[culturaIndex].texto,
                     seleccionada: letraSel,
                     correcta: correcta,
-                    textoCorrecto: textoCorrecto,
-                    opciones: [...culturaPreguntas[culturaIndex].opciones]
+                    textoCorrecto: textoCorrecto
                 });
                 const fb = document.getElementById('feedbackCultura');
                 if (letraSel === correcta) {
@@ -904,45 +1066,24 @@ Las preguntas deben ser desafiantes pero justas.`;
         const total = culturaRespuestas.length;
         const correctas = culturaRespuestas.filter(r => r.seleccionada === r.correcta).length;
         const nota = (correctas / total) * 5;
-        culturaApp.innerHTML = `
-            <div class="score-area">
-                <div style="font-size:1.2rem;">🌍 Resultado de Cultura General</div>
-                <div class="score-number">${nota.toFixed(1)} / 5.0</div>
-                <div>✅ Correctas: ${correctas} | ❌ Incorrectas: ${total - correctas}</div>
-                <div style="margin-top: 15px;">
-                    <button class="primary" id="nuevoCulturaBtn">🎲 Nuevo test de Cultura General</button>
+        const appCultura = document.getElementById('culturaApp');
+        if (appCultura) {
+            appCultura.innerHTML = `
+                <div class="score-area">
+                    <div style="font-size:1.2rem;">🌍 Resultado de Cultura General</div>
+                    <div class="score-number">${nota.toFixed(1)} / 5.0</div>
+                    <div>✅ Correctas: ${correctas} | ❌ Incorrectas: ${total - correctas}</div>
+                    <button class="primary" id="nuevoCulturaBtn" style="margin-top:15px;">🎲 Nuevo test</button>
                 </div>
-            </div>
-        `;
-        document.getElementById('nuevoCulturaBtn')?.addEventListener('click', () => iniciarCulturaGeneral());
+            `;
+            document.getElementById('nuevoCulturaBtn')?.addEventListener('click', () => iniciarCulturaGeneral());
+        }
     }
     
     function escapeHtml(str) { return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
     
-    // ========== PESTAÑAS ==========
-    const tabBtns = document.querySelectorAll('.tab-btn');
-    const resumenPanel = document.getElementById('resumenPanel');
-    const historialPanel = document.getElementById('historialPanel');
-    const culturaPanel = document.getElementById('culturaPanel');
-    
-    tabBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            tabBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            const tab = btn.getAttribute('data-tab');
-            resumenPanel.classList.remove('active-panel');
-            historialPanel.classList.remove('active-panel');
-            culturaPanel.classList.remove('active-panel');
-            if (tab === 'resumen') resumenPanel.classList.add('active-panel');
-            else if (tab === 'historial') historialPanel.classList.add('active-panel');
-            else if (tab === 'cultura') culturaPanel.classList.add('active-panel');
-            
-            if (tab === 'cultura' && !culturaEnCurso && culturaApp.innerHTML === '') iniciarCulturaGeneral();
-        });
-    });
-    
-    cargarExamenes();
-    iniciarCulturaGeneral();
+    // Iniciar
+    mostrarPantallaLogin();
 </script>
 </body>
 </html>
