@@ -79,7 +79,6 @@
             color: #ffaaaa;
         }
 
-        /* Tarjetas de exámenes guardados */
         .examenes-lista {
             margin-top: 25px;
             border-top: 2px solid rgba(255,217,102,0.3);
@@ -378,8 +377,93 @@
 <script>
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
     
+    // ========== MÚLTIPLES APIS CON ROTACIÓN AUTOMÁTICA ==========
+    
+    // Clave de Groq
     const GROQ_API_KEY = "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";
-    const MODELO = "llama-3.1-8b-instant";
+    
+    // Clave de Cerebras (la que me diste)
+    const CEREBRAS_API_KEY = "csk-mmcetp8ndr55em9v83833hd8xvx495vwkpcvkmm8h2xcp8nc";
+    
+    let proveedorActual = 0;
+    let ultimoProveedorUsado = "Groq";
+    
+    // Función para llamar a Groq
+    async function llamarGroq(prompt) {
+        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${GROQ_API_KEY}`
+            },
+            body: JSON.stringify({
+                model: "llama-3.1-8b-instant",
+                messages: [
+                    { role: "system", content: "Eres un asistente educativo útil. Respondes en español de forma clara y concisa." },
+                    { role: "user", content: prompt }
+                ],
+                temperature: 0.5,
+                max_tokens: 1500
+            })
+        });
+        
+        if (response.status === 429) throw new Error("Rate limit de Groq");
+        if (!response.ok) throw new Error(`Error ${response.status}`);
+        const data = await response.json();
+        return data.choices[0].message.content;
+    }
+    
+    // Función para llamar a Cerebras
+    async function llamarCerebras(prompt) {
+        const response = await fetch("https://api.cerebras.ai/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${CEREBRAS_API_KEY}`
+            },
+            body: JSON.stringify({
+                model: "llama3.1-8b",
+                messages: [
+                    { role: "system", content: "Eres un asistente educativo útil. Respondes en español de forma clara y concisa." },
+                    { role: "user", content: prompt }
+                ],
+                temperature: 0.5,
+                max_tokens: 1500
+            })
+        });
+        
+        if (response.status === 429) throw new Error("Rate limit de Cerebras");
+        if (!response.ok) throw new Error(`Error ${response.status}`);
+        const data = await response.json();
+        return data.choices[0].message.content;
+    }
+    
+    // Función principal con rotación automática entre proveedores
+    async function llamarIA(prompt, intento = 0) {
+        const proveedores = [
+            { nombre: "Groq", func: llamarGroq },
+            { nombre: "Cerebras", func: llamarCerebras }
+        ];
+        
+        for (let i = 0; i < proveedores.length; i++) {
+            const idx = (proveedorActual + i) % proveedores.length;
+            const provider = proveedores[idx];
+            
+            try {
+                const resultado = await provider.func(prompt);
+                proveedorActual = (idx + 1) % proveedores.length;
+                ultimoProveedorUsado = provider.nombre;
+                console.log(`✅ Usando ${provider.nombre}`);
+                return resultado;
+            } catch (error) {
+                console.log(`❌ ${provider.nombre} falló: ${error.message}`);
+                // Continuar con el siguiente proveedor
+            }
+        }
+        
+        // Si todos fallaron
+        throw new Error("Todos los proveedores fallaron. Espera unos segundos y reintenta.");
+    }
     
     // ========== ALMACENAMIENTO LOCAL ==========
     let examenesGuardados = [];
@@ -460,10 +544,8 @@
         const examen = examenesGuardados.find(e => e.id === id);
         if (!examen) return;
         
-        // Cambiar a pestaña resumen para mostrar el examen
         document.querySelector('.tab-btn[data-tab="resumen"]').click();
         
-        // Cargar el examen guardado
         preguntasExamen = examen.preguntas;
         respuestasUsuario = [];
         examenEnCurso = true;
@@ -473,13 +555,12 @@
         mostrarPreguntaNormal();
     }
     
-    // Variables del examen
+    // ========== VARIABLES DEL EXAMEN ==========
     let ultimoResumen = "";
     let preguntasExamen = [];
     let respuestasUsuario = [];
     let examenEnCurso = false;
     let preguntaActualIndex = 0;
-    let examenActualId = null;
     
     let culturaPreguntas = [];
     let culturaRespuestas = [];
@@ -501,22 +582,6 @@
     function mostrarResumen() {
         if (resumenSection) resumenSection.style.display = 'block';
         if (avisoExamen) avisoExamen.style.display = 'none';
-    }
-    
-    async function llamarGroq(prompt) {
-        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${GROQ_API_KEY}` },
-            body: JSON.stringify({
-                model: MODELO,
-                messages: [{ role: "system", content: "Eres un asistente educativo útil. Respondes en español de forma clara." }, { role: "user", content: prompt }],
-                temperature: 0.7,
-                max_tokens: 2000
-            })
-        });
-        if (!response.ok) throw new Error(`Error ${response.status}`);
-        const data = await response.json();
-        return data.choices[0].message.content;
     }
     
     function parsearPreguntas(respuesta) {
@@ -605,11 +670,13 @@
         
         try {
             const prompt = `Resume el siguiente texto de forma clara y concisa en español (máximo 300 palabras):\n\n${textoFuente.substring(0,8000)}`;
-            const resumen = await llamarGroq(prompt);
+            const resumen = await llamarIA(prompt);
             summaryTextDiv.innerHTML = resumen.replace(/\n/g,'<br>');
             ultimoResumen = resumen;
             examBtnContainer.style.display = 'block';
-        } catch(e) { summaryTextDiv.innerHTML = `❌ Error: ${e.message}`; }
+        } catch(e) { 
+            summaryTextDiv.innerHTML = `<div style="color:#ffaaaa; text-align:center;">❌ Error: ${e.message}<br><br>Espera unos segundos y reintenta.</div>`;
+        }
     });
     
     // ========== EXAMEN NORMAL ==========
@@ -630,7 +697,7 @@ D) [opcion]
 Respuesta: X
 (Repite hasta 10)
 Texto: ${textoBase.substring(0,6000)}`;
-            const respuesta = await llamarGroq(prompt);
+            const respuesta = await llamarIA(prompt);
             preguntasExamen = parsearPreguntas(respuesta);
             if (preguntasExamen.length < 8) throw new Error("No se generaron suficientes preguntas");
             preguntasExamen = preguntasExamen.slice(0,10);
@@ -639,7 +706,9 @@ Texto: ${textoBase.substring(0,6000)}`;
             preguntaActualIndex = 0;
             ocultarResumen();
             mostrarPreguntaNormal();
-        } catch(e) { examArea.innerHTML = `<div style="color:#ffaaaa; text-align:center;">❌ Error: ${e.message}<br><button class="primary" onclick="location.reload()" style="margin-top:10px;">Reintentar</button></div>`; }
+        } catch(e) { 
+            examArea.innerHTML = `<div style="color:#ffaaaa; text-align:center;">❌ Error: ${e.message}<br><br>Espera unos segundos y haz clic en "Nuevo examen".</div>`;
+        }
     }
     
     function mostrarPreguntaNormal() {
@@ -689,7 +758,6 @@ Texto: ${textoBase.substring(0,6000)}`;
         const nota = (correctas / total) * 5;
         examenEnCurso = false;
         
-        // Guardar el examen automáticamente
         const respuestasParaGuardar = preguntasExamen.map((p, i) => ({
             pregunta: p.texto,
             correcta: p.respuesta,
@@ -744,7 +812,7 @@ D) [opcion]
 Respuesta: X
 (Repite hasta 10)
 Las preguntas deben ser desafiantes pero justas.`;
-            const respuesta = await llamarGroq(prompt);
+            const respuesta = await llamarIA(prompt);
             culturaPreguntas = parsearPreguntas(respuesta);
             if (culturaPreguntas.length < 8) throw new Error("No se generaron suficientes");
             culturaPreguntas = culturaPreguntas.slice(0,10);
@@ -754,7 +822,9 @@ Las preguntas deben ser desafiantes pero justas.`;
             tiempoRestante = 300;
             iniciarTemporizador();
             mostrarPreguntaCultura();
-        } catch(e) { culturaApp.innerHTML = `<div style="color:#ffaaaa; text-align:center;">❌ Error: ${e.message}<br><button class="primary" onclick="iniciarCulturaGeneral()" style="margin-top:10px;">Reintentar</button></div>`; }
+        } catch(e) { 
+            culturaApp.innerHTML = `<div style="color:#ffaaaa; text-align:center;">❌ Error: ${e.message}<br><br>Espera unos segundos y haz clic en "Nuevo test".</div>`;
+        }
     }
     
     function iniciarTemporizador() {
@@ -875,4 +945,4 @@ Las preguntas deben ser desafiantes pero justas.`;
     iniciarCulturaGeneral();
 </script>
 </body>
-</html>    
+</html>
