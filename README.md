@@ -8,6 +8,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #0f2b3d, #1a4a6f, #0f2b3d);
@@ -15,14 +16,16 @@
             animation: gradientShift 12s ease infinite;
             min-height: 100vh;
             padding: 20px;
-            color: #ffffff;
         }
+        
         @keyframes gradientShift {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
+        
         .container { max-width: 1200px; margin: 0 auto; }
+        
         h1 { text-align: center; color: #ffd966; font-size: 2rem; margin-bottom: 10px; }
         .subtitle { text-align: center; color: #cbd5e6; margin-bottom: 25px; }
 
@@ -33,6 +36,7 @@
             margin-bottom: 25px;
             flex-wrap: wrap;
         }
+        
         .tab-btn {
             background: rgba(15, 35, 55, 0.8);
             backdrop-filter: blur(8px);
@@ -42,9 +46,10 @@
             font-weight: bold;
             border-radius: 50px;
             cursor: pointer;
-            color: #ffffff;
+            color: #cbd5e6;
             transition: all 0.2s;
         }
+        
         .tab-btn.active { background: #ffd966; color: #1a2a3a; border-color: #ffd966; }
 
         .panel {
@@ -55,25 +60,15 @@
             padding: 30px;
             animation: fadeIn 0.3s ease;
             border: 1px solid rgba(255, 217, 102, 0.2);
-            color: #ffffff;
         }
+        
         .panel.active-panel { display: block; }
+        
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Sección del resumen */
-        .resumen-section {
-            transition: all 0.3s ease;
-        }
-        /* Texto del resumen en blanco durante el examen (invisible) */
-        .resumen-texto-oculto {
-            opacity: 0;
-            pointer-events: none;
-            user-select: none;
-        }
-        
         .aviso-examen {
             background: rgba(255, 100, 100, 0.2);
             border: 1px solid #ff6666;
@@ -82,6 +77,83 @@
             margin: 15px 0;
             text-align: center;
             color: #ffaaaa;
+        }
+
+        /* Tarjetas de exámenes guardados */
+        .examenes-lista {
+            margin-top: 25px;
+            border-top: 2px solid rgba(255,217,102,0.3);
+            padding-top: 20px;
+        }
+        
+        .examenes-lista h3 {
+            color: #ffd966;
+            margin-bottom: 15px;
+        }
+        
+        .examen-card {
+            background: rgba(0,0,0,0.3);
+            border-radius: 20px;
+            padding: 15px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            cursor: pointer;
+            transition: 0.2s;
+            border: 1px solid rgba(255,217,102,0.2);
+        }
+        
+        .examen-card:hover {
+            background: rgba(255,217,102,0.1);
+            border-color: #ffd966;
+            transform: translateX(5px);
+        }
+        
+        .examen-info {
+            flex: 1;
+        }
+        
+        .examen-titulo {
+            font-weight: bold;
+            color: #ffd966;
+            margin-bottom: 5px;
+        }
+        
+        .examen-fecha {
+            font-size: 0.75rem;
+            color: #8aaec0;
+        }
+        
+        .examen-preview {
+            font-size: 0.8rem;
+            color: #cbd5e6;
+            margin-top: 5px;
+        }
+        
+        .examen-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-icon {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            color: #ffd966;
+            font-size: 0.8rem;
+        }
+        
+        .btn-icon:hover { background: rgba(255,217,102,0.2); }
+        
+        .empty-message {
+            color: #8aaec0;
+            text-align: center;
+            padding: 20px;
         }
 
         .file-drop-area {
@@ -93,43 +165,160 @@
             margin-bottom: 20px;
             cursor: pointer;
             transition: all 0.3s;
-            color: #ffffff;
         }
+        
         .file-drop-area.drag-over { border-color: #ffd966; background: rgba(255, 217, 102, 0.1); }
         .file-drop-area.has-file { border-color: #4caf50; background: rgba(76, 175, 80, 0.1); }
         .file-icon { font-size: 3rem; }
-        .file-drop-text strong { color: #ffd966; }
         .file-info { display: none; align-items: center; justify-content: center; gap: 15px; margin-top: 15px; }
         .file-info.show { display: flex; }
         .file-name { background: rgba(0,0,0,0.4); padding: 5px 15px; border-radius: 60px; color: #4caf50; }
         .file-clear-btn { background: rgba(255,100,100,0.8); border: none; padding: 5px 12px; border-radius: 30px; cursor: pointer; color: white; }
         .file-select-btn { background: rgba(255,217,102,0.2); border: 1px solid #ffd966; padding: 8px 20px; border-radius: 40px; display: inline-block; margin-top: 10px; cursor: pointer; color: #ffd966; }
+        .file-input-hidden { display: none; }
 
-        textarea { width: 100%; padding: 12px; border-radius: 20px; border: 1px solid rgba(255,217,102,0.3); background: rgba(0,0,0,0.4); color: #ffffff; margin: 10px 0; }
+        textarea { 
+            width: 100%; 
+            padding: 12px; 
+            border-radius: 20px; 
+            border: 1px solid rgba(255,217,102,0.3); 
+            background: rgba(0,0,0,0.4); 
+            color: #ffffff; 
+            margin: 10px 0; 
+        }
+        
         textarea::placeholder { color: #8aaec0; }
         
-        button.primary { background: linear-gradient(95deg, #ffd966, #ffb347); border: none; padding: 12px 28px; border-radius: 40px; font-weight: bold; cursor: pointer; margin: 5px; color: #1a2a3a; }
-        button.secondary { background: rgba(255,255,255,0.1); border: 1px solid #ffd966; color: #ffd966; padding: 10px 24px; border-radius: 40px; cursor: pointer; }
-        .result-box { background: rgba(10,30,50,0.6); border-radius: 20px; padding: 20px; margin-top: 20px; color: #ffffff; }
-        .loading::before { content: ""; display: inline-block; width: 18px; height: 18px; border: 2px solid #ffd966; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 8px; }
+        button.primary { 
+            background: linear-gradient(95deg, #ffd966, #ffb347); 
+            border: none; 
+            padding: 12px 28px; 
+            border-radius: 40px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            margin: 5px; 
+            color: #1a2a3a; 
+        }
+        
+        button.secondary { 
+            background: rgba(255,255,255,0.1); 
+            border: 1px solid #ffd966; 
+            color: #ffd966; 
+            padding: 10px 24px; 
+            border-radius: 40px; 
+            cursor: pointer; 
+        }
+        
+        .result-box { 
+            background: rgba(10,30,50,0.6); 
+            border-radius: 20px; 
+            padding: 20px; 
+            margin-top: 20px; 
+            color: #ffffff; 
+        }
+        
+        .loading::before { 
+            content: ""; 
+            display: inline-block; 
+            width: 18px; 
+            height: 18px; 
+            border: 2px solid #ffd966; 
+            border-top-color: transparent; 
+            border-radius: 50%; 
+            animation: spin 0.8s linear infinite; 
+            margin-right: 8px; 
+        }
+        
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        .question-card { background: rgba(0,0,0,0.3); border-radius: 24px; padding: 25px; margin: 20px 0; }
-        .question-text { font-size: 1.3rem; margin-bottom: 20px; color: #ffffff; }
-        .option-btn { background: rgba(25,55,80,0.9); border: 1px solid #ffd966; border-radius: 60px; padding: 12px 18px; margin: 8px; cursor: pointer; display: inline-block; transition: 0.2s; color: #ffffff; }
-        .option-btn:hover { background: rgba(255,217,102,0.2); transform: scale(1.02); color: #ffffff; }
-        .feedback-correct { background: #2e7d32; padding: 10px; border-radius: 30px; margin-top: 15px; text-align: center; color: #ffffff; }
-        .feedback-wrong { background: #c62828; padding: 10px; border-radius: 30px; margin-top: 15px; text-align: center; color: #ffffff; }
-        .score-area { background: #1a3a4a; padding: 15px; border-radius: 30px; margin: 20px 0; text-align: center; color: #ffffff; }
-        .score-number { font-size: 2rem; font-weight: bold; color: #ffd966; }
-        .timer { font-size: 1.5rem; font-weight: bold; color: #ffaa66; font-family: monospace; }
-        .timer.warning { color: #ff4444; animation: pulse 0.5s infinite; }
-        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .question-card { 
+            background: rgba(0,0,0,0.3); 
+            border-radius: 24px; 
+            padding: 25px; 
+            margin: 20px 0; 
+        }
         
-        h3 { color: #ffd966; margin-bottom: 20px; }
-        strong { color: #ffd966; }
+        .question-text { 
+            font-size: 1.3rem; 
+            margin-bottom: 20px; 
+            color: #ffffff; 
+        }
         
-        @media (max-width: 650px) { .panel { padding: 20px; } .question-text { font-size: 1.1rem; } .option-btn { padding: 8px 12px; } }
+        .option-btn { 
+            background: rgba(25,55,80,0.9); 
+            border: 1px solid #ffd966; 
+            border-radius: 60px; 
+            padding: 12px 18px; 
+            margin: 8px; 
+            cursor: pointer; 
+            display: inline-block; 
+            transition: 0.2s; 
+            color: #ffffff;
+            font-weight: 500;
+        }
+        
+        .option-btn:hover { 
+            background: rgba(255,217,102,0.2); 
+            transform: scale(1.02); 
+            color: #ffffff; 
+        }
+        
+        .feedback-correct { 
+            background: #2e7d32; 
+            padding: 10px; 
+            border-radius: 30px; 
+            margin-top: 15px; 
+            text-align: center; 
+            color: #ffffff; 
+        }
+        
+        .feedback-wrong { 
+            background: #c62828; 
+            padding: 10px; 
+            border-radius: 30px; 
+            margin-top: 15px; 
+            text-align: center; 
+            color: #ffffff; 
+        }
+        
+        .score-area { 
+            background: #1a3a4a; 
+            padding: 15px; 
+            border-radius: 30px; 
+            margin: 20px 0; 
+            text-align: center; 
+            color: #ffffff; 
+        }
+        
+        .score-number { 
+            font-size: 2rem; 
+            font-weight: bold; 
+            color: #ffd966; 
+        }
+        
+        .timer { 
+            font-size: 1.5rem; 
+            font-weight: bold; 
+            color: #ffaa66; 
+            font-family: monospace; 
+        }
+        
+        .timer.warning { 
+            color: #ff4444; 
+            animation: pulse 0.5s infinite; 
+        }
+        
+        @keyframes pulse { 
+            0%,100% { opacity: 1; } 
+            50% { opacity: 0.5; } 
+        }
+        
+        @media (max-width: 650px) { 
+            .panel { padding: 20px; } 
+            .question-text { font-size: 1.1rem; } 
+            .option-btn { padding: 8px 12px; font-size: 0.9rem; }
+            .examen-card { flex-direction: column; align-items: flex-start; }
+        }
     </style>
 </head>
 <body>
@@ -139,13 +328,13 @@
 
     <div class="tabs">
         <button class="tab-btn active" data-tab="resumen">📄 Resumen y Examen</button>
+        <button class="tab-btn" data-tab="historial">📋 Historial de Exámenes</button>
         <button class="tab-btn" data-tab="cultura">🌍 Cultura General</button>
     </div>
 
     <!-- Panel Resumen y Examen -->
     <div id="resumenPanel" class="panel active-panel">
-        <!-- Sección que se oculta durante el examen -->
-        <div id="resumenSection" class="resumen-section">
+        <div id="resumenSection">
             <h3>📎 Sube un PDF o pega texto</h3>
             <div class="file-drop-area" id="fileDropArea">
                 <div class="file-icon">📄</div>
@@ -166,14 +355,18 @@
             </div>
         </div>
 
-        <!-- Aviso durante el examen -->
         <div id="avisoExamen" class="aviso-examen" style="display:none;">
             📖 El resumen se ha ocultado para mantener la honestidad del examen.<br>
             Termina el examen para volver a verlo.
         </div>
 
-        <!-- Zona del examen normal -->
         <div id="examArea" style="margin-top: 20px;"></div>
+    </div>
+
+    <!-- Panel Historial de Exámenes -->
+    <div id="historialPanel" class="panel">
+        <h3>📋 Exámenes guardados</h3>
+        <div id="listaExamenes" class="examenes-lista"></div>
     </div>
 
     <!-- Panel Cultura General -->
@@ -188,11 +381,105 @@
     const GROQ_API_KEY = "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";
     const MODELO = "llama-3.1-8b-instant";
     
+    // ========== ALMACENAMIENTO LOCAL ==========
+    let examenesGuardados = [];
+    
+    function cargarExamenes() {
+        const guardados = localStorage.getItem('examenes_guardados');
+        if (guardados) {
+            examenesGuardados = JSON.parse(guardados);
+        } else {
+            examenesGuardados = [];
+        }
+        actualizarListaExamenes();
+    }
+    
+    function guardarExamen(titulo, resumen, preguntas, respuestas) {
+        const nuevoExamen = {
+            id: Date.now(),
+            titulo: titulo.substring(0, 50) + (titulo.length > 50 ? '...' : ''),
+            resumen: resumen,
+            preguntas: preguntas,
+            respuestasCorrectas: respuestas,
+            fecha: new Date().toLocaleString()
+        };
+        examenesGuardados.unshift(nuevoExamen);
+        if (examenesGuardados.length > 20) examenesGuardados.pop();
+        localStorage.setItem('examenes_guardados', JSON.stringify(examenesGuardados));
+        actualizarListaExamenes();
+        return nuevoExamen.id;
+    }
+    
+    function eliminarExamen(id) {
+        examenesGuardados = examenesGuardados.filter(e => e.id !== id);
+        localStorage.setItem('examenes_guardados', JSON.stringify(examenesGuardados));
+        actualizarListaExamenes();
+    }
+    
+    function actualizarListaExamenes() {
+        const contenedor = document.getElementById('listaExamenes');
+        if (!contenedor) return;
+        
+        if (examenesGuardados.length === 0) {
+            contenedor.innerHTML = '<div class="empty-message">📭 No hay exámenes guardados aún. Genera un resumen y crea un examen para que aparezca aquí.</div>';
+            return;
+        }
+        
+        contenedor.innerHTML = examenesGuardados.map(examen => `
+            <div class="examen-card" data-id="${examen.id}">
+                <div class="examen-info">
+                    <div class="examen-titulo">📖 ${escapeHtml(examen.titulo)}</div>
+                    <div class="examen-fecha">📅 ${examen.fecha}</div>
+                    <div class="examen-preview">${examen.preguntas?.length || 0} preguntas</div>
+                </div>
+                <div class="examen-actions">
+                    <button class="btn-icon tomar-examen" data-id="${examen.id}">📝 Tomar examen</button>
+                    <button class="btn-icon eliminar-examen" data-id="${examen.id}">🗑️ Eliminar</button>
+                </div>
+            </div>
+        `).join('');
+        
+        document.querySelectorAll('.tomar-examen').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const id = parseInt(btn.getAttribute('data-id'));
+                iniciarExamenGuardado(id);
+            });
+        });
+        
+        document.querySelectorAll('.eliminar-examen').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const id = parseInt(btn.getAttribute('data-id'));
+                eliminarExamen(id);
+            });
+        });
+    }
+    
+    function iniciarExamenGuardado(id) {
+        const examen = examenesGuardados.find(e => e.id === id);
+        if (!examen) return;
+        
+        // Cambiar a pestaña resumen para mostrar el examen
+        document.querySelector('.tab-btn[data-tab="resumen"]').click();
+        
+        // Cargar el examen guardado
+        preguntasExamen = examen.preguntas;
+        respuestasUsuario = [];
+        examenEnCurso = true;
+        preguntaActualIndex = 0;
+        ultimoResumen = examen.resumen;
+        ocultarResumen();
+        mostrarPreguntaNormal();
+    }
+    
+    // Variables del examen
     let ultimoResumen = "";
     let preguntasExamen = [];
     let respuestasUsuario = [];
     let examenEnCurso = false;
     let preguntaActualIndex = 0;
+    let examenActualId = null;
     
     let culturaPreguntas = [];
     let culturaRespuestas = [];
@@ -204,22 +491,16 @@
     const examArea = document.getElementById('examArea');
     const culturaApp = document.getElementById('culturaApp');
     const resumenSection = document.getElementById('resumenSection');
-    const summaryResult = document.getElementById('summaryResult');
     const avisoExamen = document.getElementById('avisoExamen');
     
     function ocultarResumen() {
-        // Ocultar el resumen visualmente (opacidad 0)
-        if (summaryResult) {
-            summaryResult.classList.add('resumen-texto-oculto');
-        }
-        avisoExamen.style.display = 'block';
+        if (resumenSection) resumenSection.style.display = 'none';
+        if (avisoExamen) avisoExamen.style.display = 'block';
     }
     
     function mostrarResumen() {
-        if (summaryResult) {
-            summaryResult.classList.remove('resumen-texto-oculto');
-        }
-        avisoExamen.style.display = 'none';
+        if (resumenSection) resumenSection.style.display = 'block';
+        if (avisoExamen) avisoExamen.style.display = 'none';
     }
     
     async function llamarGroq(prompt) {
@@ -270,7 +551,7 @@
         return texto;
     }
     
-    // Interactividad archivo
+    // ========== INTERACTIVIDAD ARCHIVO ==========
     const fileDropArea = document.getElementById('fileDropArea');
     const pdfInput = document.getElementById('pdfInput');
     const fileInfo = document.getElementById('fileInfo');
@@ -304,7 +585,7 @@
     });
     fileDropArea.addEventListener('click', () => pdfInput.click());
     
-    // Generar resumen
+    // ========== GENERAR RESUMEN ==========
     document.getElementById('generateSummaryBtn').addEventListener('click', async () => {
         const pdfFile = pdfInput.files[0];
         const manualText = document.getElementById('rawTextInput').value;
@@ -331,6 +612,7 @@
         } catch(e) { summaryTextDiv.innerHTML = `❌ Error: ${e.message}`; }
     });
     
+    // ========== EXAMEN NORMAL ==========
     document.getElementById('examFromSummaryBtn').addEventListener('click', async () => {
         if (!ultimoResumen) { alert("Genera un resumen primero"); return; }
         await iniciarExamenNormal(ultimoResumen);
@@ -357,7 +639,7 @@ Texto: ${textoBase.substring(0,6000)}`;
             preguntaActualIndex = 0;
             ocultarResumen();
             mostrarPreguntaNormal();
-        } catch(e) { examArea.innerHTML = `<div class="error-msg">❌ Error: ${e.message}<br><button class="primary" onclick="location.reload()">Reintentar</button></div>`; }
+        } catch(e) { examArea.innerHTML = `<div style="color:#ffaaaa; text-align:center;">❌ Error: ${e.message}<br><button class="primary" onclick="location.reload()" style="margin-top:10px;">Reintentar</button></div>`; }
     }
     
     function mostrarPreguntaNormal() {
@@ -407,6 +689,14 @@ Texto: ${textoBase.substring(0,6000)}`;
         const nota = (correctas / total) * 5;
         examenEnCurso = false;
         
+        // Guardar el examen automáticamente
+        const respuestasParaGuardar = preguntasExamen.map((p, i) => ({
+            pregunta: p.texto,
+            correcta: p.respuesta,
+            opciones: p.opciones
+        }));
+        guardarExamen(ultimoResumen, ultimoResumen, preguntasExamen, respuestasParaGuardar);
+        
         let preguntasHtml = '<div style="font-family: Arial; padding: 20px;"><h1>📚 Examen - Repaso</h1><h2>Preguntas y Respuestas Correctas</h2>';
         respuestasUsuario.forEach((r, i) => {
             preguntasHtml += `<div style="margin-bottom: 25px; border-bottom: 1px solid #ccc; padding-bottom: 10px;">
@@ -427,6 +717,7 @@ Texto: ${textoBase.substring(0,6000)}`;
                     <button class="primary" id="pdfBtn">📄 Generar PDF con todas las preguntas</button>
                     <button class="secondary" id="newExamBtn">📝 Nuevo examen (mismo texto)</button>
                 </div>
+                <div style="margin-top: 15px; font-size:0.9rem; color:#ffd966;">✅ Este examen ha sido guardado en el historial</div>
             </div>
             <div id="pdfContent" style="display:none;">${preguntasHtml}</div>
         `;
@@ -440,6 +731,7 @@ Texto: ${textoBase.substring(0,6000)}`;
         document.getElementById('newExamBtn')?.addEventListener('click', () => iniciarExamenNormal(ultimoResumen));
     }
     
+    // ========== CULTURA GENERAL ==========
     async function iniciarCulturaGeneral() {
         culturaApp.innerHTML = '<div class="loading"></div> Generando preguntas de cultura general...';
         try {
@@ -462,7 +754,7 @@ Las preguntas deben ser desafiantes pero justas.`;
             tiempoRestante = 300;
             iniciarTemporizador();
             mostrarPreguntaCultura();
-        } catch(e) { culturaApp.innerHTML = `<div class="error-msg">❌ Error: ${e.message}<br><button class="primary" onclick="iniciarCulturaGeneral()">Reintentar</button></div>`; }
+        } catch(e) { culturaApp.innerHTML = `<div style="color:#ffaaaa; text-align:center;">❌ Error: ${e.message}<br><button class="primary" onclick="iniciarCulturaGeneral()" style="margin-top:10px;">Reintentar</button></div>`; }
     }
     
     function iniciarTemporizador() {
@@ -557,9 +849,10 @@ Las preguntas deben ser desafiantes pero justas.`;
     
     function escapeHtml(str) { return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
     
-    // Pestañas
+    // ========== PESTAÑAS ==========
     const tabBtns = document.querySelectorAll('.tab-btn');
     const resumenPanel = document.getElementById('resumenPanel');
+    const historialPanel = document.getElementById('historialPanel');
     const culturaPanel = document.getElementById('culturaPanel');
     
     tabBtns.forEach(btn => {
@@ -567,19 +860,19 @@ Las preguntas deben ser desafiantes pero justas.`;
             tabBtns.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             const tab = btn.getAttribute('data-tab');
-            if (tab === 'resumen') {
-                resumenPanel.classList.add('active-panel');
-                culturaPanel.classList.remove('active-panel');
-                if (!examenEnCurso) mostrarResumen();
-            } else {
-                culturaPanel.classList.add('active-panel');
-                resumenPanel.classList.remove('active-panel');
-                if (!culturaEnCurso && culturaApp.innerHTML === '') iniciarCulturaGeneral();
-            }
+            resumenPanel.classList.remove('active-panel');
+            historialPanel.classList.remove('active-panel');
+            culturaPanel.classList.remove('active-panel');
+            if (tab === 'resumen') resumenPanel.classList.add('active-panel');
+            else if (tab === 'historial') historialPanel.classList.add('active-panel');
+            else if (tab === 'cultura') culturaPanel.classList.add('active-panel');
+            
+            if (tab === 'cultura' && !culturaEnCurso && culturaApp.innerHTML === '') iniciarCulturaGeneral();
         });
     });
     
+    cargarExamenes();
     iniciarCulturaGeneral();
 </script>
 </body>
-</html>
+</html>    
