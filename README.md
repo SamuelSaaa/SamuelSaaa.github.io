@@ -2,38 +2,37 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>📚 Exámenes IA - Con Supabase</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>📚 Exámenes IA - Móvil</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background: linear-gradient(135deg, #0f2b3d, #1a4a6f, #0f2b3d);
             background-size: 200% 200%;
             animation: gradientShift 12s ease infinite;
             min-height: 100vh;
-            padding: 20px;
+            padding: 12px;
         }
         @keyframes gradientShift {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
-        .container { max-width: 1200px; margin: 0 auto; }
+        .container { max-width: 800px; margin: 0 auto; }
         
+        /* Pantallas de login */
         .auth-screen {
             background: rgba(15, 35, 55, 0.95);
             backdrop-filter: blur(12px);
-            border-radius: 48px;
-            padding: 40px;
-            max-width: 450px;
-            margin: 50px auto;
+            border-radius: 32px;
+            padding: 30px 20px;
             text-align: center;
             border: 1px solid rgba(255, 217, 102, 0.3);
         }
-        .auth-screen h2 { color: #ffd966; margin-bottom: 25px; }
+        .auth-screen h2 { color: #ffd966; margin-bottom: 20px; font-size: 1.8rem; }
         .auth-screen input {
             width: 100%;
             padding: 14px;
@@ -42,16 +41,17 @@
             border: 1px solid rgba(255,217,102,0.3);
             background: rgba(0,0,0,0.4);
             color: white;
-            font-size: 1rem;
+            font-size: 16px;
         }
         .auth-screen button {
             background: linear-gradient(95deg, #ffd966, #ffb347);
             border: none;
-            padding: 12px 28px;
+            padding: 14px 24px;
             border-radius: 40px;
             font-weight: bold;
+            font-size: 16px;
             cursor: pointer;
-            margin: 10px 5px;
+            margin: 8px 5px;
         }
         .auth-screen .switch-btn {
             background: transparent;
@@ -60,6 +60,7 @@
         }
         .error-msg { color: #ff8888; margin: 10px 0; }
         
+        /* Header de usuario */
         .user-header {
             display: flex;
             justify-content: space-between;
@@ -67,29 +68,30 @@
             background: rgba(15, 35, 55, 0.8);
             backdrop-filter: blur(8px);
             border-radius: 60px;
-            padding: 10px 20px;
-            margin-bottom: 25px;
+            padding: 10px 16px;
+            margin-bottom: 20px;
             flex-wrap: wrap;
+            gap: 10px;
         }
-        .user-info { color: #ffd966; font-weight: bold; }
-        .admin-badge { background: #ff4444; color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; margin-left: 10px; }
-        .logout-btn { background: rgba(255,100,100,0.3); border: 1px solid #ff6666; padding: 6px 16px; border-radius: 30px; cursor: pointer; color: #ffaaaa; }
+        .user-info { color: #ffd966; font-weight: bold; font-size: 14px; }
+        .admin-badge { background: #ff4444; color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; margin-left: 8px; }
+        .logout-btn { background: rgba(255,100,100,0.3); border: 1px solid #ff6666; padding: 8px 16px; border-radius: 30px; cursor: pointer; color: #ffaaaa; font-size: 14px; }
         
         .tabs {
             display: flex;
-            gap: 15px;
+            gap: 8px;
             justify-content: center;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             flex-wrap: wrap;
         }
         .tab-btn {
             background: rgba(15, 35, 55, 0.8);
             backdrop-filter: blur(8px);
             border: 1px solid rgba(255, 217, 102, 0.3);
-            padding: 12px 35px;
-            font-size: 1rem;
+            padding: 10px 20px;
+            font-size: 14px;
             font-weight: bold;
-            border-radius: 50px;
+            border-radius: 40px;
             cursor: pointer;
             color: #cbd5e6;
             transition: all 0.2s;
@@ -100,8 +102,8 @@
             display: none;
             background: rgba(15, 35, 55, 0.85);
             backdrop-filter: blur(12px);
-            border-radius: 32px;
-            padding: 30px;
+            border-radius: 28px;
+            padding: 20px;
             border: 1px solid rgba(255, 217, 102, 0.2);
         }
         .panel.active-panel { display: block; }
@@ -110,18 +112,19 @@
             background: rgba(255, 100, 100, 0.2);
             border: 1px solid #ff6666;
             border-radius: 20px;
-            padding: 15px;
+            padding: 12px;
             margin: 15px 0;
             text-align: center;
             color: #ffaaaa;
+            font-size: 14px;
         }
 
-        .examenes-lista { margin-top: 25px; border-top: 2px solid rgba(255,217,102,0.3); padding-top: 20px; }
+        .examenes-lista { margin-top: 20px; border-top: 2px solid rgba(255,217,102,0.3); padding-top: 15px; }
         .examen-card {
             background: rgba(0,0,0,0.3);
             border-radius: 20px;
-            padding: 15px;
-            margin-bottom: 12px;
+            padding: 12px;
+            margin-bottom: 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -130,69 +133,106 @@
             border: 1px solid rgba(255,217,102,0.2);
         }
         .examen-info { flex: 1; }
-        .examen-titulo { font-weight: bold; color: #ffd966; }
-        .examen-fecha { font-size: 0.75rem; color: #8aaec0; }
-        .examen-usuario { font-size: 0.7rem; color: #ffaa66; }
+        .examen-titulo { font-weight: bold; color: #ffd966; font-size: 14px; }
+        .examen-fecha { font-size: 0.7rem; color: #8aaec0; }
+        .examen-usuario { font-size: 0.65rem; color: #ffaa66; }
         .btn-icon {
             background: rgba(255,255,255,0.1);
             border: none;
-            padding: 6px 12px;
-            border-radius: 20px;
+            padding: 8px 14px;
+            border-radius: 30px;
             cursor: pointer;
             color: #ffd966;
+            font-size: 13px;
         }
         .btn-icon.admin-delete { color: #ff8888; border: 1px solid #ff8888; }
-        .empty-message { color: #8aaec0; text-align: center; padding: 20px; }
+        .empty-message { color: #8aaec0; text-align: center; padding: 30px; }
 
         .file-drop-area {
             border: 2px dashed rgba(255, 217, 102, 0.4);
-            border-radius: 28px;
-            padding: 30px;
+            border-radius: 24px;
+            padding: 20px;
             text-align: center;
             background: rgba(10, 30, 50, 0.5);
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             cursor: pointer;
         }
         .file-drop-area.drag-over { border-color: #ffd966; background: rgba(255, 217, 102, 0.1); }
-        .file-icon { font-size: 3rem; }
-        .file-info { display: none; align-items: center; justify-content: center; gap: 15px; margin-top: 15px; }
+        .file-icon { font-size: 2.5rem; }
+        .file-info { display: none; align-items: center; justify-content: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
         .file-info.show { display: flex; }
-        .file-name { background: rgba(0,0,0,0.4); padding: 5px 15px; border-radius: 60px; color: #4caf50; }
-        .file-clear-btn { background: rgba(255,100,100,0.8); border: none; padding: 5px 12px; border-radius: 30px; cursor: pointer; color: white; }
-        .file-select-btn { background: rgba(255,217,102,0.2); border: 1px solid #ffd966; padding: 8px 20px; border-radius: 40px; display: inline-block; margin-top: 10px; cursor: pointer; color: #ffd966; }
+        .file-name { background: rgba(0,0,0,0.4); padding: 5px 12px; border-radius: 30px; color: #4caf50; font-size: 12px; }
+        .file-clear-btn { background: rgba(255,100,100,0.8); border: none; padding: 5px 12px; border-radius: 30px; cursor: pointer; color: white; font-size: 12px; }
+        .file-select-btn { background: rgba(255,217,102,0.2); border: 1px solid #ffd966; padding: 8px 18px; border-radius: 40px; display: inline-block; margin-top: 8px; cursor: pointer; color: #ffd966; font-size: 14px; }
         .file-input-hidden { display: none; }
 
-        textarea { width: 100%; padding: 12px; border-radius: 20px; border: 1px solid rgba(255,217,102,0.3); background: rgba(0,0,0,0.4); color: white; margin: 10px 0; }
-        button.primary { background: linear-gradient(95deg, #ffd966, #ffb347); border: none; padding: 12px 28px; border-radius: 40px; font-weight: bold; cursor: pointer; margin: 5px; color: #1a2a3a; }
-        button.secondary { background: rgba(255,255,255,0.1); border: 1px solid #ffd966; color: #ffd966; padding: 10px 24px; border-radius: 40px; cursor: pointer; }
-        .result-box { background: rgba(10,30,50,0.6); border-radius: 20px; padding: 20px; margin-top: 20px; color: white; }
+        textarea { 
+            width: 100%; 
+            padding: 12px; 
+            border-radius: 20px; 
+            border: 1px solid rgba(255,217,102,0.3); 
+            background: rgba(0,0,0,0.4); 
+            color: white; 
+            margin: 10px 0; 
+            font-size: 14px;
+        }
+        button.primary { 
+            background: linear-gradient(95deg, #ffd966, #ffb347); 
+            border: none; 
+            padding: 12px 20px; 
+            border-radius: 40px; 
+            font-weight: bold; 
+            font-size: 16px;
+            cursor: pointer; 
+            margin: 5px; 
+            color: #1a2a3a; 
+            width: 100%;
+        }
+        button.secondary { 
+            background: rgba(255,255,255,0.1); 
+            border: 1px solid #ffd966; 
+            color: #ffd966; 
+            padding: 10px 20px; 
+            border-radius: 40px; 
+            font-size: 14px;
+            cursor: pointer; 
+            width: 100%;
+        }
+        .result-box { background: rgba(10,30,50,0.6); border-radius: 20px; padding: 15px; margin-top: 15px; color: white; font-size: 14px; }
         .loading::before { content: ""; display: inline-block; width: 18px; height: 18px; border: 2px solid #ffd966; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 8px; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        .question-card { background: rgba(0,0,0,0.3); border-radius: 24px; padding: 25px; margin: 20px 0; }
-        .question-text { font-size: 1.3rem; margin-bottom: 20px; color: white; }
+        .question-card { background: rgba(0,0,0,0.3); border-radius: 24px; padding: 20px; margin: 15px 0; }
+        .question-text { font-size: 1.2rem; margin-bottom: 20px; color: white; line-height: 1.4; }
         .option-btn {
             background: rgba(25,55,80,0.9);
             border: 1px solid #ffd966;
-            border-radius: 60px;
-            padding: 12px 18px;
-            margin: 8px;
+            border-radius: 50px;
+            padding: 14px 16px;
+            margin: 8px 0;
             cursor: pointer;
-            display: inline-block;
+            display: block;
+            width: 100%;
+            text-align: left;
             color: white;
             font-weight: 500;
+            font-size: 15px;
             transition: 0.2s;
         }
-        .option-btn.disabled, .option-btn:disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
-        .option-btn:hover:not(:disabled) { background: rgba(255,217,102,0.2); transform: scale(1.02); }
-        .feedback-correct { background: #2e7d32; padding: 10px; border-radius: 30px; margin-top: 15px; text-align: center; color: white; }
-        .feedback-wrong { background: #c62828; padding: 10px; border-radius: 30px; margin-top: 15px; text-align: center; color: white; }
-        .score-area { background: #1a3a4a; padding: 15px; border-radius: 30px; margin: 20px 0; text-align: center; color: white; }
-        .score-number { font-size: 2rem; font-weight: bold; color: #ffd966; }
-        .timer { font-size: 1.5rem; font-weight: bold; color: #ffaa66; font-family: monospace; }
+        .option-btn:active { background: rgba(255,217,102,0.3); transform: scale(0.98); }
+        .feedback-correct { background: #2e7d32; padding: 12px; border-radius: 30px; margin-top: 15px; text-align: center; color: white; font-size: 14px; }
+        .feedback-wrong { background: #c62828; padding: 12px; border-radius: 30px; margin-top: 15px; text-align: center; color: white; font-size: 14px; }
+        .score-area { background: #1a3a4a; padding: 20px; border-radius: 28px; margin: 20px 0; text-align: center; color: white; }
+        .score-number { font-size: 2.2rem; font-weight: bold; color: #ffd966; }
+        .timer { font-size: 1.3rem; font-weight: bold; color: #ffaa66; font-family: monospace; }
         .timer.warning { color: #ff4444; animation: pulse 0.5s infinite; }
         @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
-        @media (max-width: 650px) { .panel { padding: 20px; } .question-text { font-size: 1.1rem; } .option-btn { padding: 8px 12px; } }
+        
+        @media (max-width: 500px) {
+            .question-text { font-size: 1rem; }
+            .option-btn { padding: 12px 14px; font-size: 14px; }
+            .tab-btn { padding: 8px 14px; font-size: 12px; }
+        }
     </style>
 </head>
 <body>
@@ -212,7 +252,7 @@
     let proveedorActual = 0;
     let usuarioActual = null;
     let esAdmin = false;
-    let examenActualEsNuevo = false;  // 🔑 NUEVA BANDERA: indica si el examen debe guardarse en la nube
+    let examenActualEsNuevo = false;
     
     // ========== FUNCIONES SUPABASE ==========
     async function obtenerExamenesCloud() {
@@ -359,18 +399,18 @@
                 <button class="logout-btn" id="logoutBtn">🚪 Cerrar sesión</button>
             </div>
             <div class="tabs">
-                <button class="tab-btn active" data-tab="resumen">📄 Resumen y Examen</button>
+                <button class="tab-btn active" data-tab="resumen">📄 Resumen</button>
                 <button class="tab-btn" data-tab="historial">📋 Historial</button>
-                <button class="tab-btn" data-tab="cultura">🌍 Cultura General</button>
+                <button class="tab-btn" data-tab="cultura">🌍 Cultura</button>
             </div>
             <div id="resumenPanel" class="panel active-panel">
                 <div id="resumenSection">
                     <h3>📎 Sube un PDF o pega texto</h3>
                     <div class="file-drop-area" id="fileDropArea">
                         <div class="file-icon">📄</div>
-                        <div class="file-drop-text"><strong>📂 Arrastra tu PDF</strong><br>o haz clic</div>
+                        <div class="file-drop-text"><strong>📂 Toca para seleccionar</strong><br>o arrastra un PDF</div>
                         <div class="file-info" id="fileInfo"><span class="file-name" id="fileName"></span><button class="file-clear-btn" id="clearFileBtn">✖</button></div>
-                        <div class="file-select-btn" id="selectFileBtn">🔍 Seleccionar</div>
+                        <div class="file-select-btn" id="selectFileBtn">🔍 Seleccionar archivo</div>
                         <input type="file" id="pdfInput" accept="application/pdf" class="file-input-hidden">
                     </div>
                     <textarea id="rawTextInput" rows="4" placeholder="O pega texto..."></textarea>
@@ -438,7 +478,7 @@
         examenEnCurso = true;
         preguntaActualIndex = 0;
         ultimoResumen = examen.resumen || "";
-        examenActualEsNuevo = false;  // 🔑 MARCA: NO guardar al final
+        examenActualEsNuevo = false;
         ocultarResumen();
         mostrarPreguntaNormal();
         document.querySelector('.tab-btn[data-tab="resumen"]').click();
@@ -514,7 +554,7 @@
         const area = document.getElementById('examArea');
         if(!area) return;
         area.innerHTML = '<div class="loading"></div> Generando examen...';
-        examenActualEsNuevo = true;  // 🔑 MARCA: guardar al final
+        examenActualEsNuevo = true;
         try {
             const respuesta = await llamarIA(`Genera un examen de 10 preguntas de opción múltiple (A,B,C,D) basado en este texto. Formato:\nPregunta 1: [texto]\nA) [opcion]\nB) [opcion]\nC) [opcion]\nD) [opcion]\nRespuesta: X\n(Repite 10 veces)\nTexto: ${textoBase.substring(0,6000)}`);
             preguntasExamen = parsearPreguntas(respuesta);
@@ -535,9 +575,9 @@
         const q = preguntasExamen[preguntaActualIndex];
         area.innerHTML = `
             <div class="question-card">
-                <div style="margin-bottom:15px; color:#ffd966;">📋 Pregunta ${preguntaActualIndex+1} de ${preguntasExamen.length}</div>
+                <div style="margin-bottom:12px; color:#ffd966;">📋 Pregunta ${preguntaActualIndex+1} de ${preguntasExamen.length}</div>
                 <div class="question-text">${escapeHtml(q.texto)}</div>
-                <div id="opcionesNormal">${q.opciones.map((opt,idx) => `<div class="option-btn" data-letra="${['A','B','C','D'][idx]}">${['A','B','C','D'][idx]}) ${escapeHtml(opt)}</div>`).join('')}</div>
+                <div id="opcionesNormal">${q.opciones.map((opt,idx) => `<button class="option-btn" data-letra="${['A','B','C','D'][idx]}">${['A','B','C','D'][idx]}) ${escapeHtml(opt)}</button>`).join('')}</div>
                 <div id="feedbackNormal"></div>
             </div>`;
         let bloqueado = false;
@@ -572,7 +612,6 @@
         const nota = (correctas / total) * 5;
         examenEnCurso = false;
         
-        // 🔑 SOLO guardar si es un examen NUEVO (no del historial)
         if(examenActualEsNuevo) {
             await guardarExamenCloud(ultimoResumen, ultimoResumen, preguntasExamen, usuarioActual);
             actualizarListaExamenes();
@@ -593,7 +632,7 @@
                 <div>✅ Correctas: ${correctas} | ❌ Incorrectas: ${total - correctas}</div>
                 <button class="primary" id="pdfBtn">📄 Generar PDF</button>
                 <button class="secondary" id="newExamBtn">📝 Nuevo examen</button>
-                ${examenActualEsNuevo ? '<div style="margin-top:10px; color:#ffd966;">✅ Examen guardado en la nube</div>' : ''}
+                ${examenActualEsNuevo ? '<div style="margin-top:10px; color:#ffd966;">✅ Examen guardado</div>' : ''}
             </div>
             <div id="pdfContent" style="display:none;">${preguntasHtml}</div>`;
         mostrarResumen();
@@ -631,8 +670,8 @@
         if(culturaIndex >= culturaPreguntas.length) { finalizarCulturaGeneral(); return; }
         const q = culturaPreguntas[culturaIndex];
         appCultura.innerHTML = `
-            <div style="display:flex; justify-content:space-between; margin-bottom:20px;"><div style="color:#ffd966;">📋 Pregunta ${culturaIndex+1} de ${culturaPreguntas.length}</div><div id="culturaTimer" class="timer">⏱️ 05:00</div></div>
-            <div class="question-card"><div class="question-text">${escapeHtml(q.texto)}</div><div id="opcionesCultura">${q.opciones.map((opt,idx) => `<div class="option-btn" data-letra="${['A','B','C','D'][idx]}">${['A','B','C','D'][idx]}) ${escapeHtml(opt)}</div>`).join('')}</div><div id="feedbackCultura"></div></div>`;
+            <div style="display:flex; justify-content:space-between; margin-bottom:15px; flex-wrap:wrap;"><div style="color:#ffd966;">📋 Pregunta ${culturaIndex+1} de ${culturaPreguntas.length}</div><div id="culturaTimer" class="timer">⏱️ 05:00</div></div>
+            <div class="question-card"><div class="question-text">${escapeHtml(q.texto)}</div><div id="opcionesCultura">${q.opciones.map((opt,idx) => `<button class="option-btn" data-letra="${['A','B','C','D'][idx]}">${['A','B','C','D'][idx]}) ${escapeHtml(opt)}</button>`).join('')}</div><div id="feedbackCultura"></div></div>`;
         let bloqueado = false;
         document.querySelectorAll('#opcionesCultura .option-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -662,7 +701,6 @@
     
     function escapeHtml(str) { return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
     
-    // Crear admin inicial si no existe
     (async () => {
         const usuarios = JSON.parse(localStorage.getItem('usuarios') || '{}');
         if(!usuarios.admin) {
