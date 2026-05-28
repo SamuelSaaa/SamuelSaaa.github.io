@@ -201,7 +201,7 @@
 <script>
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
     
-    // ========== CONFIGURACIÓN SUPABASE (TUS DATOS) ==========
+    // ========== CONFIGURACIÓN SUPABASE ==========
     const SUPABASE_URL = "https://eiaojqfnqvcpvfywhdle.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpYW9qcWZucXZjcHZmeXdoZGxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5OTEzNTAsImV4cCI6MjA5NTU2NzM1MH0.zHZSVPXgDoeN1-hWIG6l0PunUOZ1YYTxC103aP2c1M4";
     
@@ -212,6 +212,7 @@
     let proveedorActual = 0;
     let usuarioActual = null;
     let esAdmin = false;
+    let examenActualEsNuevo = false;  // 🔑 NUEVA BANDERA: indica si el examen debe guardarse en la nube
     
     // ========== FUNCIONES SUPABASE ==========
     async function obtenerExamenesCloud() {
@@ -437,6 +438,7 @@
         examenEnCurso = true;
         preguntaActualIndex = 0;
         ultimoResumen = examen.resumen || "";
+        examenActualEsNuevo = false;  // 🔑 MARCA: NO guardar al final
         ocultarResumen();
         mostrarPreguntaNormal();
         document.querySelector('.tab-btn[data-tab="resumen"]').click();
@@ -512,6 +514,7 @@
         const area = document.getElementById('examArea');
         if(!area) return;
         area.innerHTML = '<div class="loading"></div> Generando examen...';
+        examenActualEsNuevo = true;  // 🔑 MARCA: guardar al final
         try {
             const respuesta = await llamarIA(`Genera un examen de 10 preguntas de opción múltiple (A,B,C,D) basado en este texto. Formato:\nPregunta 1: [texto]\nA) [opcion]\nB) [opcion]\nC) [opcion]\nD) [opcion]\nRespuesta: X\n(Repite 10 veces)\nTexto: ${textoBase.substring(0,6000)}`);
             preguntasExamen = parsearPreguntas(respuesta);
@@ -568,7 +571,13 @@
         const correctas = respuestasUsuario.filter(r => r.seleccionada === r.correcta).length;
         const nota = (correctas / total) * 5;
         examenEnCurso = false;
-        await guardarExamenCloud(ultimoResumen, ultimoResumen, preguntasExamen, usuarioActual);
+        
+        // 🔑 SOLO guardar si es un examen NUEVO (no del historial)
+        if(examenActualEsNuevo) {
+            await guardarExamenCloud(ultimoResumen, ultimoResumen, preguntasExamen, usuarioActual);
+            actualizarListaExamenes();
+        }
+        
         let preguntasHtml = '<div style="font-family: Arial; padding: 20px;"><h1>📚 Examen - Repaso</h1>';
         respuestasUsuario.forEach((r,i) => {
             preguntasHtml += `<div style="margin-bottom:25px;"><p><strong>${i+1}. ${escapeHtml(r.pregunta)}</strong></p>
@@ -577,19 +586,19 @@
                 <p>Tu respuesta: ${r.seleccionada}) ${escapeHtml(r.opciones[r.seleccionada.charCodeAt(0)-65] || 'No seleccionada')}</p></div>`;
         });
         preguntasHtml += `<p><strong>Calificación: ${nota.toFixed(1)} / 5.0 (${correctas}/${total} correctas)</strong></p></div>`;
+        
         area.innerHTML = `
             <div class="score-area">
                 <div class="score-number">${nota.toFixed(1)} / 5.0</div>
                 <div>✅ Correctas: ${correctas} | ❌ Incorrectas: ${total - correctas}</div>
                 <button class="primary" id="pdfBtn">📄 Generar PDF</button>
                 <button class="secondary" id="newExamBtn">📝 Nuevo examen</button>
-                <div style="margin-top:10px; color:#ffd966;">✅ Examen guardado en la nube</div>
+                ${examenActualEsNuevo ? '<div style="margin-top:10px; color:#ffd966;">✅ Examen guardado en la nube</div>' : ''}
             </div>
             <div id="pdfContent" style="display:none;">${preguntasHtml}</div>`;
         mostrarResumen();
         document.getElementById('pdfBtn')?.addEventListener('click', () => { const el = document.getElementById('pdfContent'); html2pdf().from(el).set({ filename: `examen_${Date.now()}.pdf` }).save(); });
         document.getElementById('newExamBtn')?.addEventListener('click', () => iniciarExamenNormal(ultimoResumen));
-        actualizarListaExamenes();
     }
     
     // ========== CULTURA GENERAL ==========
