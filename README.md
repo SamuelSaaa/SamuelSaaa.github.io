@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>📚 Resúmenes, Exámenes y Cultura General</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -61,6 +61,24 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        /* Sección oculta durante el examen */
+        .resumen-section {
+            transition: all 0.3s ease;
+        }
+        .resumen-section.oculto {
+            display: none;
+        }
+        
+        .aviso-examen {
+            background: rgba(255, 100, 100, 0.2);
+            border: 1px solid #ff6666;
+            border-radius: 20px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: center;
+            color: #ffaaaa;
+        }
+
         .file-drop-area {
             border: 2px dashed rgba(255, 217, 102, 0.4);
             border-radius: 28px;
@@ -114,27 +132,36 @@
 
     <!-- Panel Resumen y Examen -->
     <div id="resumenPanel" class="panel active-panel">
-        <h3>📎 Sube un PDF o pega texto</h3>
-        <div class="file-drop-area" id="fileDropArea">
-            <div class="file-icon">📄</div>
-            <div class="file-drop-text"><strong>📂 Arrastra y suelta tu PDF aquí</strong><br>o haz clic para seleccionar</div>
-            <div class="file-info" id="fileInfo"><span class="file-name" id="fileName"></span><button class="file-clear-btn" id="clearFileBtn">✖ Cambiar</button></div>
-            <div class="file-select-btn" id="selectFileBtn">🔍 Seleccionar archivo</div>
-            <input type="file" id="pdfInput" accept="application/pdf" class="file-input-hidden">
-        </div>
-        <textarea id="rawTextInput" rows="4" placeholder="O pega aquí el texto que quieras resumir..."></textarea>
-        <button class="primary" id="generateSummaryBtn">✨ Generar Resumen con IA</button>
+        <!-- Sección que se oculta durante el examen -->
+        <div id="resumenSection" class="resumen-section">
+            <h3>📎 Sube un PDF o pega texto</h3>
+            <div class="file-drop-area" id="fileDropArea">
+                <div class="file-icon">📄</div>
+                <div class="file-drop-text"><strong>📂 Arrastra y suelta tu PDF aquí</strong><br>o haz clic para seleccionar</div>
+                <div class="file-info" id="fileInfo"><span class="file-name" id="fileName"></span><button class="file-clear-btn" id="clearFileBtn">✖ Cambiar</button></div>
+                <div class="file-select-btn" id="selectFileBtn">🔍 Seleccionar archivo</div>
+                <input type="file" id="pdfInput" accept="application/pdf" class="file-input-hidden">
+            </div>
+            <textarea id="rawTextInput" rows="4" placeholder="O pega aquí el texto que quieras resumir..."></textarea>
+            <button class="primary" id="generateSummaryBtn">✨ Generar Resumen con IA</button>
 
-        <div id="summaryResult" class="result-box" style="display:none;">
-            <strong>📌 Resumen generado:</strong>
-            <div id="summaryText"></div>
-            <div class="exam-from-summary-btn" id="examFromSummaryContainer" style="display:none;">
-                <button class="secondary" id="examFromSummaryBtn">📝 Tomar examen sobre este resumen</button>
+            <div id="summaryResult" class="result-box" style="display:none;">
+                <strong>📌 Resumen generado:</strong>
+                <div id="summaryText"></div>
+                <div class="exam-from-summary-btn" id="examFromSummaryContainer" style="display:none;">
+                    <button class="secondary" id="examFromSummaryBtn">📝 Tomar examen sobre este resumen</button>
+                </div>
             </div>
         </div>
 
+        <!-- Aviso durante el examen -->
+        <div id="avisoExamen" class="aviso-examen" style="display:none;">
+            📖 El resumen se ha ocultado para mantener la honestidad del examen.<br>
+            Termina el examen para volver a verlo.
+        </div>
+
         <!-- Zona del examen normal -->
-        <div id="examArea" style="margin-top: 30px;"></div>
+        <div id="examArea" style="margin-top: 20px;"></div>
     </div>
 
     <!-- Panel Cultura General -->
@@ -152,7 +179,7 @@
     // Variables globales
     let ultimoResumen = "";
     let preguntasExamen = [];
-    let respuestasUsuario = []; // { seleccionada, correcta, textoOpcionCorrecta }
+    let respuestasUsuario = [];
     let examenEnCurso = false;
     let preguntaActualIndex = 0;
     
@@ -161,12 +188,25 @@
     let culturaRespuestas = [];
     let culturaIndex = 0;
     let culturaEnCurso = false;
-    let tiempoRestante = 300; // 5 minutos en segundos
+    let tiempoRestante = 300;
     let temporizador = null;
     
     // Elementos DOM
     const examArea = document.getElementById('examArea');
     const culturaApp = document.getElementById('culturaApp');
+    const resumenSection = document.getElementById('resumenSection');
+    const avisoExamen = document.getElementById('avisoExamen');
+    
+    // Funciones para ocultar/mostrar resumen
+    function ocultarResumen() {
+        resumenSection.style.display = 'none';
+        avisoExamen.style.display = 'block';
+    }
+    
+    function mostrarResumen() {
+        resumenSection.style.display = 'block';
+        avisoExamen.style.display = 'none';
+    }
     
     // ========== FUNCIONES COMUNES ==========
     async function llamarGroq(prompt) {
@@ -303,6 +343,8 @@ Texto: ${textoBase.substring(0,6000)}`;
             respuestasUsuario = [];
             examenEnCurso = true;
             preguntaActualIndex = 0;
+            // Ocultar el resumen durante el examen
+            ocultarResumen();
             mostrarPreguntaNormal();
         } catch(e) { examArea.innerHTML = `<div class="error-msg">❌ Error: ${e.message}<br><button class="primary" onclick="location.reload()">Reintentar</button></div>`; }
     }
@@ -378,6 +420,10 @@ Texto: ${textoBase.substring(0,6000)}`;
             </div>
             <div id="pdfContent" style="display:none;">${preguntasHtml}</div>
         `;
+        
+        // Mostrar el resumen nuevamente
+        mostrarResumen();
+        
         document.getElementById('pdfBtn')?.addEventListener('click', () => {
             const element = document.getElementById('pdfContent');
             html2pdf().from(element).set({ filename: `examen_repaso_${new Date().toISOString().slice(0,19)}.pdf`, margin: 1 }).save();
@@ -516,6 +562,8 @@ Las preguntas deben ser desafiantes pero justas.`;
             if (tab === 'resumen') {
                 resumenPanel.classList.add('active-panel');
                 culturaPanel.classList.remove('active-panel');
+                // Si no hay examen en curso, mostrar resumen
+                if (!examenEnCurso) mostrarResumen();
             } else {
                 culturaPanel.classList.add('active-panel');
                 resumenPanel.classList.remove('active-panel');
