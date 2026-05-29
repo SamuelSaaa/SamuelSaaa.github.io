@@ -2,8 +2,8 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>📚 Exámenes IA - Móvil</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>📚 Exámenes IA - Con Supabase</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
@@ -23,7 +23,6 @@
         }
         .container { max-width: 800px; margin: 0 auto; }
         
-        /* Pantallas de login */
         .auth-screen {
             background: rgba(15, 35, 55, 0.95);
             backdrop-filter: blur(12px);
@@ -60,7 +59,6 @@
         }
         .error-msg { color: #ff8888; margin: 10px 0; }
         
-        /* Header de usuario */
         .user-header {
             display: flex;
             justify-content: space-between;
@@ -282,6 +280,43 @@
                 headers: { "apikey": SUPABASE_ANON_KEY, "Authorization": `Bearer ${SUPABASE_ANON_KEY}` }
             });
         } catch(e) {}
+    }
+    
+    // ========== FUNCIONES PDF MEJORADAS ==========
+    async function generarPDF(contenidoHTML, nombreArchivo) {
+        if (!contenidoHTML || contenidoHTML.trim() === '') {
+            alert("No hay contenido para generar el PDF");
+            return false;
+        }
+        
+        // Crear un elemento temporal
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = contenidoHTML;
+        tempDiv.style.position = 'absolute';
+        tempDiv.style.left = '-9999px';
+        tempDiv.style.top = '0';
+        tempDiv.style.width = '800px';
+        tempDiv.style.backgroundColor = 'white';
+        tempDiv.style.padding = '20px';
+        tempDiv.style.fontFamily = 'Arial, sans-serif';
+        document.body.appendChild(tempDiv);
+        
+        try {
+            await html2pdf().from(tempDiv).set({
+                margin: 0.5,
+                filename: nombreArchivo,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, logging: false },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            }).save();
+            return true;
+        } catch(e) {
+            console.error("Error PDF:", e);
+            alert("Error al generar el PDF: " + e.message);
+            return false;
+        } finally {
+            document.body.removeChild(tempDiv);
+        }
     }
     
     // ========== SISTEMA DE USUARIOS ==========
@@ -537,9 +572,18 @@
         document.getElementById('generateSummaryBtn')?.addEventListener('click', async () => {
             const pdfFile = document.getElementById('pdfInput').files[0], manualText = document.getElementById('rawTextInput').value;
             let textoFuente = "";
-            if(pdfFile) { try { textoFuente = await extraerTextoPDF(pdfFile); } catch(e) { alert("Error PDF"); return; } }
+            if(pdfFile) { 
+                try { textoFuente = await extraerTextoPDF(pdfFile); } 
+                catch(e) { alert("Error al leer el PDF: " + e.message); return; }
+            }
             else if(manualText.trim()) textoFuente = manualText;
             else { alert("Sube un PDF o texto"); return; }
+            
+            if(textoFuente.trim().length < 50) {
+                alert("⚠️ El PDF no contiene texto legible. Puede ser una imagen escaneada o estar protegido.");
+                return;
+            }
+            
             const summaryDiv = document.getElementById('summaryResult'), summaryTextDiv = document.getElementById('summaryText'), examBtnCont = document.getElementById('examFromSummaryContainer');
             summaryDiv.style.display = 'block'; summaryTextDiv.innerHTML = '<span class="loading"></span> Generando resumen...'; examBtnCont.style.display = 'none';
             try {
@@ -558,7 +602,7 @@
         try {
             const respuesta = await llamarIA(`Genera un examen de 10 preguntas de opción múltiple (A,B,C,D) basado en este texto. Formato:\nPregunta 1: [texto]\nA) [opcion]\nB) [opcion]\nC) [opcion]\nD) [opcion]\nRespuesta: X\n(Repite 10 veces)\nTexto: ${textoBase.substring(0,6000)}`);
             preguntasExamen = parsearPreguntas(respuesta);
-            if(preguntasExamen.length < 8) throw new Error("No se generaron suficientes");
+            if(preguntasExamen.length < 8) throw new Error("No se generaron suficientes preguntas");
             preguntasExamen = preguntasExamen.slice(0,10);
             respuestasUsuario = [];
             examenEnCurso = true;
@@ -617,14 +661,22 @@
             actualizarListaExamenes();
         }
         
-        let preguntasHtml = '<div style="font-family: Arial; padding: 20px;"><h1>📚 Examen - Repaso</h1>';
+        // Generar HTML para el PDF
+        let preguntasHtml = `<div style="font-family: Arial, sans-serif; padding: 20px;">
+            <h1 style="color: #1a4a6f;">📚 Examen - Repaso</h1>
+            <p style="color: #666;">Fecha: ${new Date().toLocaleString()}</p>
+            <p style="color: #666;">Usuario: ${usuarioActual}</p>
+            <hr>`;
+        
         respuestasUsuario.forEach((r,i) => {
-            preguntasHtml += `<div style="margin-bottom:25px;"><p><strong>${i+1}. ${escapeHtml(r.pregunta)}</strong></p>
+            preguntasHtml += `<div style="margin-bottom: 25px; page-break-inside: avoid;">
+                <p><strong>${i+1}. ${escapeHtml(r.pregunta)}</strong></p>
                 <p>${r.opciones.map((opt,idx) => `${['A','B','C','D'][idx]}) ${escapeHtml(opt)}`).join(' | ')}</p>
-                <p style="color:green;">✅ Respuesta correcta: ${r.correcta}) ${escapeHtml(r.textoCorrecto)}</p>
-                <p>Tu respuesta: ${r.seleccionada}) ${escapeHtml(r.opciones[r.seleccionada.charCodeAt(0)-65] || 'No seleccionada')}</p></div>`;
+                <p style="color: green;"><strong>✅ Respuesta correcta: ${r.correcta}) ${escapeHtml(r.textoCorrecto)}</strong></p>
+                <p>Tu respuesta: ${r.seleccionada}) ${escapeHtml(r.opciones[r.seleccionada.charCodeAt(0)-65] || 'No seleccionada')}</p>
+            </div>`;
         });
-        preguntasHtml += `<p><strong>Calificación: ${nota.toFixed(1)} / 5.0 (${correctas}/${total} correctas)</strong></p></div>`;
+        preguntasHtml += `<hr><p><strong>Calificación: ${nota.toFixed(1)} / 5.0 (${correctas}/${total} correctas)</strong></p></div>`;
         
         area.innerHTML = `
             <div class="score-area">
@@ -632,11 +684,15 @@
                 <div>✅ Correctas: ${correctas} | ❌ Incorrectas: ${total - correctas}</div>
                 <button class="primary" id="pdfBtn">📄 Generar PDF</button>
                 <button class="secondary" id="newExamBtn">📝 Nuevo examen</button>
-                ${examenActualEsNuevo ? '<div style="margin-top:10px; color:#ffd966;">✅ Examen guardado</div>' : ''}
-            </div>
-            <div id="pdfContent" style="display:none;">${preguntasHtml}</div>`;
+                ${examenActualEsNuevo ? '<div style="margin-top:10px; color:#ffd966;">✅ Examen guardado en la nube</div>' : ''}
+            </div>`;
+        
         mostrarResumen();
-        document.getElementById('pdfBtn')?.addEventListener('click', () => { const el = document.getElementById('pdfContent'); html2pdf().from(el).set({ filename: `examen_${Date.now()}.pdf` }).save(); });
+        
+        // Evento para generar PDF
+        document.getElementById('pdfBtn')?.addEventListener('click', async () => {
+            await generarPDF(preguntasHtml, `examen_repaso_${Date.now()}.pdf`);
+        });
         document.getElementById('newExamBtn')?.addEventListener('click', () => iniciarExamenNormal(ultimoResumen));
     }
     
