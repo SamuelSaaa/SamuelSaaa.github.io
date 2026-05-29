@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>.</title>
+    <title>📚 Exámenes IA - Grupo de Estudio</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -282,41 +282,89 @@
         } catch(e) {}
     }
     
-    // ========== FUNCIONES PDF MEJORADAS ==========
-    async function generarPDF(contenidoHTML, nombreArchivo) {
-        if (!contenidoHTML || contenidoHTML.trim() === '') {
-            alert("No hay contenido para generar el PDF");
-            return false;
+    // ========== FUNCIÓN PDF CON jsPDF ==========
+    async function generarPDF(contenidoTexto) {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        doc.setFontSize(18);
+        doc.setTextColor(26, 42, 58);
+        doc.text("📚 Examen - Repaso", 20, 20);
+        
+        doc.setFontSize(10);
+        doc.setTextColor(100, 100, 100);
+        doc.text(`Fecha: ${new Date().toLocaleString()}`, 20, 30);
+        doc.text(`Usuario: ${usuarioActual}`, 20, 36);
+        
+        doc.setFontSize(11);
+        doc.setTextColor(0, 0, 0);
+        
+        let y = 50;
+        let preguntaNum = 1;
+        
+        for (const r of contenidoTexto) {
+            if (y > 270) {
+                doc.addPage();
+                y = 20;
+            }
+            
+            // Pregunta
+            doc.setFontSize(12);
+            doc.setFont(undefined, 'bold');
+            const preguntaTexto = `${preguntaNum}. ${r.pregunta.substring(0, 80)}${r.pregunta.length > 80 ? '...' : ''}`;
+            const lineasPregunta = doc.splitTextToSize(preguntaTexto, 170);
+            doc.text(lineasPregunta, 20, y);
+            y += lineasPregunta.length * 6 + 4;
+            
+            // Opciones
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+            r.opciones.forEach((opt, idx) => {
+                if (y > 280) {
+                    doc.addPage();
+                    y = 20;
+                }
+                const opcionTexto = `${['A','B','C','D'][idx]}) ${opt.substring(0, 70)}${opt.length > 70 ? '...' : ''}`;
+                doc.text(opcionTexto, 25, y);
+                y += 6;
+            });
+            
+            // Respuesta correcta
+            if (y > 280) {
+                doc.addPage();
+                y = 20;
+            }
+            doc.setFont(undefined, 'italic');
+            doc.setTextColor(0, 128, 0);
+            doc.text(`✅ Respuesta correcta: ${r.correcta}) ${r.textoCorrecto.substring(0, 70)}`, 20, y);
+            y += 8;
+            
+            // Tu respuesta
+            doc.setTextColor(100, 100, 100);
+            const tuRespuesta = r.opciones[r.seleccionada.charCodeAt(0)-65] || 'No seleccionada';
+            doc.text(`Tu respuesta: ${r.seleccionada}) ${tuRespuesta.substring(0, 70)}`, 20, y);
+            y += 12;
+            
+            doc.setTextColor(0, 0, 0);
+            preguntaNum++;
         }
         
-        // Crear un elemento temporal
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = contenidoHTML;
-        tempDiv.style.position = 'absolute';
-        tempDiv.style.left = '-9999px';
-        tempDiv.style.top = '0';
-        tempDiv.style.width = '800px';
-        tempDiv.style.backgroundColor = 'white';
-        tempDiv.style.padding = '20px';
-        tempDiv.style.fontFamily = 'Arial, sans-serif';
-        document.body.appendChild(tempDiv);
+        // Calificación final
+        const total = contenidoTexto.length;
+        const correctas = contenidoTexto.filter(r => r.seleccionada === r.correcta).length;
+        const nota = (correctas / total) * 5;
         
-        try {
-            await html2pdf().from(tempDiv).set({
-                margin: 0.5,
-                filename: nombreArchivo,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true, logging: false },
-                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-            }).save();
-            return true;
-        } catch(e) {
-            console.error("Error PDF:", e);
-            alert("Error al generar el PDF: " + e.message);
-            return false;
-        } finally {
-            document.body.removeChild(tempDiv);
+        if (y > 270) {
+            doc.addPage();
+            y = 20;
         }
+        
+        doc.setFontSize(14);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(26, 42, 58);
+        doc.text(`Calificación: ${nota.toFixed(1)} / 5.0 (${correctas}/${total} correctas)`, 20, y);
+        
+        doc.save(`examen_repaso_${Date.now()}.pdf`);
     }
     
     // ========== SISTEMA DE USUARIOS ==========
@@ -661,23 +709,6 @@
             actualizarListaExamenes();
         }
         
-        // Generar HTML para el PDF
-        let preguntasHtml = `<div style="font-family: Arial, sans-serif; padding: 20px;">
-            <h1 style="color: #1a4a6f;">📚 Examen - Repaso</h1>
-            <p style="color: #666;">Fecha: ${new Date().toLocaleString()}</p>
-            <p style="color: #666;">Usuario: ${usuarioActual}</p>
-            <hr>`;
-        
-        respuestasUsuario.forEach((r,i) => {
-            preguntasHtml += `<div style="margin-bottom: 25px; page-break-inside: avoid;">
-                <p><strong>${i+1}. ${escapeHtml(r.pregunta)}</strong></p>
-                <p>${r.opciones.map((opt,idx) => `${['A','B','C','D'][idx]}) ${escapeHtml(opt)}`).join(' | ')}</p>
-                <p style="color: green;"><strong>✅ Respuesta correcta: ${r.correcta}) ${escapeHtml(r.textoCorrecto)}</strong></p>
-                <p>Tu respuesta: ${r.seleccionada}) ${escapeHtml(r.opciones[r.seleccionada.charCodeAt(0)-65] || 'No seleccionada')}</p>
-            </div>`;
-        });
-        preguntasHtml += `<hr><p><strong>Calificación: ${nota.toFixed(1)} / 5.0 (${correctas}/${total} correctas)</strong></p></div>`;
-        
         area.innerHTML = `
             <div class="score-area">
                 <div class="score-number">${nota.toFixed(1)} / 5.0</div>
@@ -689,9 +720,8 @@
         
         mostrarResumen();
         
-        // Evento para generar PDF
         document.getElementById('pdfBtn')?.addEventListener('click', async () => {
-            await generarPDF(preguntasHtml, `examen_repaso_${Date.now()}.pdf`);
+            await generarPDF(respuestasUsuario);
         });
         document.getElementById('newExamBtn')?.addEventListener('click', () => iniciarExamenNormal(ultimoResumen));
     }
